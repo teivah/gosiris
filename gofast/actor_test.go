@@ -71,6 +71,25 @@ func TestStatefulness(t *testing.T) {
 	childActorRef.Send("hello", "teivah", parentActorRef)
 	childActorRef.Send("hello", "teivah", parentActorRef)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	childActorRef.Send("hello", "teivah2", parentActorRef)
+}
+
+func TestClose(t *testing.T) {
+	parentActor := Actor{}
+	ActorSystem().RegisterActor("parentActor", &parentActor, Root())
+
+	childActor := Actor{}
+	childActor.React("message", func(message Message) {
+		childActor.Printf("Received %v\n", message.Data)
+	})
+	ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
+
+	parentActorRef, _ := ActorSystem().Actor("parentActor")
+	childActorRef, _ := ActorSystem().Actor("childActor")
+
+	childActorRef.AskForClose(parentActorRef)
+	
+	time.Sleep(500 * time.Millisecond)
+	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 }

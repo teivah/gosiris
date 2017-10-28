@@ -1,5 +1,9 @@
 package gofast
 
+import (
+	"fmt"
+)
+
 type Message struct {
 	messageType string
 	Data        interface{}
@@ -7,10 +11,16 @@ type Message struct {
 	Self        ActorRefInterface
 }
 
+var poisonPill = Message{"poisonpill", nil, nil, nil}
+
+func PoisonPill() Message {
+	return poisonPill
+}
+
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface) {
 	defer func() {
 		if r := recover(); r != nil {
-			return
+			fmt.Println("Recovered in f", r)
 		}
 	}()
 
@@ -22,15 +32,22 @@ func receive(actor actorInterface) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			return
+			fmt.Println("Recovered in f", r)
 		}
 	}()
 
 	for {
 		select {
 		case p := <-c:
-			//fmt.Printf("receive %v\n", p)
-			actor.configuration()[p.messageType](p)
+			if p == PoisonPill() {
+				actor.Close()
+				return
+			}
+
+			f, exists := actor.configuration()[p.messageType]
+			if exists {
+				f(p)
+			}
 		}
 	}
 }
