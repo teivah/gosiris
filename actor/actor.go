@@ -11,6 +11,7 @@ type actorInterface interface {
 	configuration() map[string]func(Message)
 	Mailbox() chan Message
 	setMailbox(chan Message)
+	setName(string)
 }
 
 func (actor *Actor) Stringer() string {
@@ -35,4 +36,8 @@ func (actor *Actor) Mailbox() chan Message {
 
 func (actor *Actor) setMailbox(mailbox chan Message) {
 	actor.mailbox = mailbox
+}
+
+func (actor *Actor) setName(name string) {
+	actor.name = name
 }

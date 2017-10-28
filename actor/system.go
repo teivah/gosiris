@@ -37,6 +37,7 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface) erro
 		return fmt.Errorf("Actor %v already registered")
 	}
 
+	actor.setName(name)
 	actorRef := &ActorRef{name}
 	system.actorNames[name] = *actorRef
 	system.actors[*actorRef] = actor
