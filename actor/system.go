@@ -1,36 +1,67 @@
 package actor
 
-import "fmt"
+import (
+	"fmt"
+)
 
-var systemInstance system = system{}
+var actorSystemInstance actorSystem = actorSystem{}
 
-func System() system {
-	return systemInstance
+//func init() {
+//	System().actorNames = make(map[string]actorRefInterface)
+//	System().actors = make(map[actorRefInterface]actorInterface)
+//}
+
+func ActorSystem() *actorSystem {
+	return &actorSystemInstance
 }
 
-
-type system struct {
-	conf map[string]actorInterface
+type actorSystem struct {
+	actorNames map[string]actorRefInterface
+	actors     map[actorRefInterface]actorInterface
 }
 
-type SystemActor interface {
+type actorSystemInterface interface {
 	RegisterActor(actorInterface) error
-	Configuration() map[string]actorInterface
+	Actor(string) (actorRefInterface, error)
+	actor(actorRefInterface) (actorInterface, error)
 }
 
-func (system *system) RegisterActor(actor actorInterface) error {
-	if system.conf == nil {
-		system.conf = make(map[string]actorInterface)
+func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
+	if system.actorNames == nil {
+		system.actorNames = make(map[string]actorRefInterface)
+		system.actors = make(map[actorRefInterface]actorInterface)
 	}
 
-	if system.conf[actor.Name()] != nil {
+	_, exists := system.actorNames[name]
+	if exists {
 		return fmt.Errorf("Actor %v already registered")
 	}
 
-	system.conf[actor.Name()] = actor
+	actorRef := &ActorRef{name}
+	system.actorNames[name] = *actorRef
+	system.actors[*actorRef] = actor
+
+	actor.setMailbox(make(chan Message))
+	go receive(actor)
+
 	return nil
 }
 
-func (system *system) Configuration() map[string]actorInterface {
-	return system.conf
+func (system *actorSystem) Actor(name string) (actorRefInterface, error) {
+	ref, exists := system.actorNames[name]
+	if !exists {
+		return nil, fmt.Errorf("Actor %v not registered", name)
+	}
+
+	return ref, nil
+}
+
+func (system *actorSystem) actor(actorRef actorRefInterface) (actorInterface, error) {
+	ref, exists := system.actors[actorRef]
+
+	if !exists {
+		return nil, fmt.Errorf("Actor %v not registered", actorRef)
+	}
+
+	return ref, nil
 }

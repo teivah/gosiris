@@ -32,10 +32,10 @@ func TestStatefulness(t *testing.T) {
 			message.Sender.Tell("error", "I already know you!", message.Self)
 		} else {
 			childActor.hello[message.Data.(string)] = true
-			message.Sender.Tell("helloback", "hello " + name + "!", message.Self)
+			message.Sender.Tell("helloback", "hello "+name+"!", message.Self)
 		}
 	})
-	childActor.Build("child")
+	ActorSystem().RegisterActor("child", &childActor)
 
 	parentActor.React("helloback", func(message Message) {
 		fmt.Printf("Parent: receive response %v\n", message.Data)
@@ -43,11 +43,13 @@ func TestStatefulness(t *testing.T) {
 	parentActor.React("error", func(message Message) {
 		fmt.Printf("Parent: receive response %v\n", message.Data)
 	})
+	ActorSystem().RegisterActor("parent", &parentActor)
 
-	parentActor.Build("parent")
+	childActorRef, _ := ActorSystem().Actor("child")
+	parentActorRef, _ := ActorSystem().Actor("parent")
 
-	childActor.Tell("hello", "teivah", &parentActor)
-	childActor.Tell("hello", "teivah", &parentActor)
+	childActorRef.Tell("hello", "teivah", parentActorRef)
+	childActorRef.Tell("hello", "teivah", parentActorRef)
 
 	time.Sleep(1000)
 }
