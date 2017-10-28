@@ -26,6 +26,7 @@ type actorInterface interface {
 	setName(string)
 	setParent(actorInterface)
 	Parent() actorRefInterface
+	Name() string
 	Close()
 }
 
@@ -72,6 +73,10 @@ func (actor *Actor) setParent(parent actorInterface) {
 }
 
 func (actor *Actor) Parent() actorRefInterface {
-	parent, _ := ActorSystem().Actor(actor.name)
+	parent, _ := ActorSystem().Actor(actor.parent.Name())
 	return parent
+}
+
+func (actor *Actor) Name() string {
+	return actor.name
 }

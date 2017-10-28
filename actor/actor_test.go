@@ -14,19 +14,16 @@ type ChildActor struct {
 	hello map[string]bool
 }
 
-var parentActor ParentActor
-var childActor ChildActor
-
-func init() {
-	childActor.hello = make(map[string]bool)
-}
-
 func TestStatefulness(t *testing.T) {
-	parentActor.React("helloback", func(message Message) {
+	childActor := ChildActor{}
+	childActor.hello = make(map[string]bool)
+	parentActor := ParentActor{}
+
+	f := func(message Message) {
 		parentActor.Printf("Receive response %v\n", message.Data)
-	}).React("error", func(message Message) {
-		parentActor.Printf("Receive response %v\n", message.Data)
-	})
+	}
+
+	parentActor.React("helloback", f).React("error", f).React("help", f)
 	ActorSystem().RegisterActor("parent", &parentActor, Root())
 
 	childActor.React("hello", func(message Message) {
@@ -36,6 +33,7 @@ func TestStatefulness(t *testing.T) {
 
 		if _, ok := childActor.hello[name]; ok {
 			message.Sender.Tell("error", "I already know you!", message.Self)
+			childActor.Parent().Tell("help", "Daddy help me!", message.Self)
 			childActor.Close()
 		} else {
 			childActor.hello[message.Data.(string)] = true
