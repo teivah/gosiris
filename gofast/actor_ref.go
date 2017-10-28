@@ -1,4 +1,4 @@
-package actor
+package gofast
 
 type ActorRef struct {
 	name string
