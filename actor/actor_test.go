@@ -7,17 +7,18 @@ import (
 	"time"
 )
 
+
 func TestRequestReply(t *testing.T) {
 	child := &actor.Actor{}
 	child.React("hello", func(message actor.Message) {
-		fmt.Printf("Receive %v\n", message.Data)
+		fmt.Printf("Child: receive %v\n", message.Data)
 		message.Sender.Tell("response", "hello teivah!", message.Self)
 	})
 	child.Build("child")
 
 	parent := &actor.Actor{}
 	parent.React("response", func(message actor.Message) {
-		fmt.Printf("Receive response %v\n", message.Data)
+		fmt.Printf("Parent: receive response %v\n", message.Data)
 	})
 	parent.Build("parent")
 
