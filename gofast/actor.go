@@ -25,7 +25,7 @@ type actorInterface interface {
 	setMailbox(chan Message)
 	setName(string)
 	setParent(actorInterface)
-	Parent() actorRefInterface
+	Parent() ActorRefInterface
 	Name() string
 	Close()
 }
@@ -72,7 +72,7 @@ func (actor *Actor) setParent(parent actorInterface) {
 	actor.parent = parent
 }
 
-func (actor *Actor) Parent() actorRefInterface {
+func (actor *Actor) Parent() ActorRefInterface {
 	parent, _ := ActorSystem().Actor(actor.parent.Name())
 	return parent
 }

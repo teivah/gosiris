@@ -7,8 +7,8 @@ import (
 var actorSystemInstance actorSystem = actorSystem{}
 
 func init() {
-	actorSystemInstance.actorNames = make(map[string]actorRefInterface)
-	actorSystemInstance.actors = make(map[actorRefInterface]actorInterface)
+	actorSystemInstance.actorNames = make(map[string]ActorRefInterface)
+	actorSystemInstance.actors = make(map[ActorRefInterface]actorInterface)
 }
 
 func ActorSystem() *actorSystem {
@@ -16,8 +16,8 @@ func ActorSystem() *actorSystem {
 }
 
 type actorSystem struct {
-	actorNames map[string]actorRefInterface
-	actors     map[actorRefInterface]actorInterface
+	actorNames map[string]ActorRefInterface
+	actors     map[ActorRefInterface]actorInterface
 }
 
 func (system *actorSystem) RegisterActor(name string, actor actorInterface, parent actorInterface) error {
@@ -28,12 +28,12 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface, pare
 
 	actor.setName(name)
 	actor.setParent(parent)
+	actor.setMailbox(make(chan Message))
+
 	actorRef :=
 		ActorRef{name}
 	system.actorNames[name] = actorRef
 	system.actors[actorRef] = actor
-
-	actor.setMailbox(make(chan Message))
 
 	go receive(actor)
 
@@ -50,7 +50,7 @@ func (system *actorSystem) unregisterActor(name string) {
 	delete(system.actors, actorRef)
 }
 
-func (system *actorSystem) Actor(name string) (actorRefInterface, error) {
+func (system *actorSystem) Actor(name string) (ActorRefInterface, error) {
 	ref, exists := system.actorNames[name]
 	if !exists {
 		return nil, fmt.Errorf("Actor %v not registered", name)
@@ -59,7 +59,7 @@ func (system *actorSystem) Actor(name string) (actorRefInterface, error) {
 	return ref, nil
 }
 
-func (system *actorSystem) actor(actorRef actorRefInterface) (actorInterface, error) {
+func (system *actorSystem) actor(actorRef ActorRefInterface) (actorInterface, error) {
 	ref, exists := system.actors[actorRef]
 
 	if !exists {
