@@ -20,12 +20,6 @@ type actorSystem struct {
 	actors     map[actorRefInterface]actorInterface
 }
 
-type actorSystemInterface interface {
-	RegisterActor(actorInterface) error
-	Actor(string) (actorRefInterface, error)
-	actor(actorRefInterface) (actorInterface, error)
-}
-
 func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
 	_, exists := system.actorNames[name]
 	if exists {
