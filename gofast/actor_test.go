@@ -107,13 +107,13 @@ func TestForward(t *testing.T) {
 
 	childActor1 := Actor{}
 	childActor1.React("message", func(message Message) {
-		childActor1.Printf("Received %v\n", message.Data)
+		childActor1.Printf("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1)
 
 	childActor2 := Actor{}
 	childActor2.React("message", func(message Message) {
-		childActor2.Printf("Received %v\n", message.Data)
+		childActor2.Printf("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
 

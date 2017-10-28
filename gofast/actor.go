@@ -36,7 +36,7 @@ func (actor *Actor) Close() {
 }
 
 func (actor *Actor) Printf(format string, a ...interface{}) (n int, err error) {
-	return fmt.Printf("["+actor.name+"] "+format, a)
+	return fmt.Printf("["+actor.name+"] "+format, a...)
 }
 
 func (actor *Actor) Stringer() string {
