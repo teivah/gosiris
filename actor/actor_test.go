@@ -14,6 +14,29 @@ type ChildActor struct {
 	hello map[string]bool
 }
 
+func TestBasic(t *testing.T) {
+	//Create a simple parent actor
+	parentActor := Actor{}
+	//Register the parent actor
+	ActorSystem().RegisterActor("parentActor", &parentActor, Root())
+
+	//Create a simple child actor
+	childActor := Actor{}
+	//Register the reactions to event types (here a reaction to message)
+	childActor.React("message", func(message Message) {
+		childActor.Printf("Received %v", message.Data)
+	})
+	//Register the child actor
+	ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
+
+	//Retrieve the parent and child actor reference
+	parentActorRef, _ := ActorSystem().Actor("parentActor")
+	childActorRef, _ := ActorSystem().Actor("childActor")
+
+	//Send a message from the parent to the child actor
+	childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
+}
+
 func TestStatefulness(t *testing.T) {
 	childActor := ChildActor{}
 	childActor.hello = make(map[string]bool)
