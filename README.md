@@ -2,24 +2,30 @@
 
 Gofast is a simple library to bring the actor model on top of Golang.
 
-Just like [Akka](https://akka.io/) for example, Gofast implements a hierarchy concept between the actors to improve the supervision.
+##Features
+* Send message from one actor to another using the mailbox principle
+* Forward message to maintain the original sender
+* Hierarchy concept between the different actors
+* Become/unbecome principle to modify at runtime the behavior of an actor
+* Capacity to gracefully ask an actor to stop its execution
 
-A hello world example would be the following:
+##Hello world
+The Gofast hello world is the following:
 
 ```go
 //Create a simple parent actor
 parentActor := Actor{}
 //Register the parent actor
-ActorSystem().RegisterActor("parentActor", &parentActor, Root())
+ActorSystem().RegisterActor("parentActor", &parentActor)
 
 //Create a simple child actor
 childActor := Actor{}
 //Register the reactions to event types (here a reaction to message)
 childActor.React("message", func(message Message) {
-	childActor.Printf("Received %v\n", message.Data)
+	message.Self.Printf("Received %v\n", message.Data)
 })
 //Register the child actor
-ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
+ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
 //Retrieve the parent and child actor reference
 parentActorRef, _ := ActorSystem().Actor("parentActor")
@@ -30,7 +36,9 @@ childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 ```
 
 ```
-[childActor] Received [Hi! How are you?]
+[childActor] Received Hi! How are you?
 ```
 
-We would like to add many other features like the capacity to distribute actors across the network etc. If you want to participate, contact me [@teivah](https://twitter.com/teivah)
+##Participation
+
+If you want to participate, feel free to contact me contact me [@teivah](https://twitter.com/teivah)
