@@ -17,6 +17,11 @@ type actorInterface interface {
 	Mailbox() chan Message
 	setMailbox(chan Message)
 	setName(string)
+	Close()
+}
+
+func (actor *Actor) Close() {
+	actor.mailbox <- PoisonPill()
 }
 
 func (actor *Actor) Printf(format string, a ...interface{}) (n int, err error) {

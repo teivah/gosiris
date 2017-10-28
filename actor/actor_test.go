@@ -29,6 +29,7 @@ func TestStatefulness(t *testing.T) {
 
 		if _, ok := childActor.hello[name]; ok {
 			message.Sender.Tell("error", "I already know you!", message.Self)
+			childActor.Close()
 		} else {
 			childActor.hello[message.Data.(string)] = true
 			message.Sender.Tell("helloback", "hello "+name+"!", message.Self)

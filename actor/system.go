@@ -37,6 +37,16 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface) erro
 	return nil
 }
 
+func (system *actorSystem) unregisterActor(name string) {
+	actorRef, exists := system.actorNames[name]
+	if !exists {
+		return
+	}
+
+	delete(system.actorNames, name)
+	delete(system.actors, actorRef)
+}
+
 func (system *actorSystem) Actor(name string) (actorRefInterface, error) {
 	ref, exists := system.actorNames[name]
 	if !exists {

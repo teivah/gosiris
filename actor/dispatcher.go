@@ -1,5 +1,11 @@
 package actor
 
+var poisonPill Message
+
+func PoisonPill() Message {
+	return poisonPill
+}
+
 type Message struct {
 	messageType string
 	Data        interface{}
@@ -14,7 +20,13 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 func receive(actor actorInterface) {
 	c := actor.Mailbox()
 	for {
-		p := <-c
-		actor.configuration()[p.messageType](p)
+		select {
+		case p := <-c:
+			if p == poisonPill {
+				close(c)
+				return
+			}
+			actor.configuration()[p.messageType](p)
+		}
 	}
 }
