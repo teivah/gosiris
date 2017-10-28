@@ -31,7 +31,7 @@ type actorInterface interface {
 }
 
 func (actor *Actor) Close() {
-	actor.mailbox <- PoisonPill()
+	close(actor.mailbox)
 }
 
 func (actor *Actor) Printf(format string, a ...interface{}) (n int, err error) {

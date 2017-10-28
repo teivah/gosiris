@@ -70,6 +70,7 @@ func TestStatefulness(t *testing.T) {
 
 	childActorRef.Tell("hello", "teivah", parentActorRef)
 	childActorRef.Tell("hello", "teivah", parentActorRef)
+	childActorRef.Tell("hello", "teivah2", parentActorRef)
 
 	time.Sleep(1000)
 }

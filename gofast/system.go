@@ -34,6 +34,7 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface, pare
 	system.actors[actorRef] = actor
 
 	actor.setMailbox(make(chan Message))
+
 	go receive(actor)
 
 	return nil

@@ -1,11 +1,5 @@
 package gofast
 
-var poisonPill Message
-
-func PoisonPill() Message {
-	return poisonPill
-}
-
 type Message struct {
 	messageType string
 	Data        interface{}
@@ -19,13 +13,16 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 
 func receive(actor actorInterface) {
 	c := actor.Mailbox()
+
+	defer func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
+
 	for {
 		select {
 		case p := <-c:
-			if p == poisonPill {
-				close(c)
-				return
-			}
 			actor.configuration()[p.messageType](p)
 		}
 	}
