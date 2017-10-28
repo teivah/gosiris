@@ -6,10 +6,10 @@ import (
 
 var actorSystemInstance actorSystem = actorSystem{}
 
-//func init() {
-//	System().actorNames = make(map[string]actorRefInterface)
-//	System().actors = make(map[actorRefInterface]actorInterface)
-//}
+func init() {
+	actorSystemInstance.actorNames = make(map[string]actorRefInterface)
+	actorSystemInstance.actors = make(map[actorRefInterface]actorInterface)
+}
 
 func ActorSystem() *actorSystem {
 	return &actorSystemInstance
@@ -27,11 +27,6 @@ type actorSystemInterface interface {
 }
 
 func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
-	if system.actorNames == nil {
-		system.actorNames = make(map[string]actorRefInterface)
-		system.actors = make(map[actorRefInterface]actorInterface)
-	}
-
 	_, exists := system.actorNames[name]
 	if exists {
 		return fmt.Errorf("Actor %v already registered")
