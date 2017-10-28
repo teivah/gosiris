@@ -2,14 +2,14 @@
 
 Gofast is a simple library to bring the actor model on top of Golang.
 
-##Features
+## Features
 * Send message from one actor to another using the mailbox principle
 * Forward message to maintain the original sender
 * Hierarchy concept between the different actors
 * Become/unbecome principle to modify at runtime the behavior of an actor
 * Capacity to gracefully ask an actor to stop its execution
 
-##Hello world
+## Hello world
 The Gofast hello world is the following:
 
 ```go
@@ -39,6 +39,6 @@ childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 [childActor] Received Hi! How are you?
 ```
 
-##Participation
+## Participation
 
 If you want to participate, feel free to contact me contact me [@teivah](https://twitter.com/teivah)
