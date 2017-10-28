@@ -39,8 +39,7 @@ func TestStatefulness(t *testing.T) {
 
 	parentActor.React("helloback", func(message Message) {
 		parentActor.Printf("Receive response %v\n", message.Data)
-	})
-	parentActor.React("error", func(message Message) {
+	}).React("error", func(message Message) {
 		parentActor.Printf("Receive response %v\n", message.Data)
 	})
 	ActorSystem().RegisterActor("parent", &parentActor)

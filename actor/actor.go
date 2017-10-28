@@ -12,7 +12,7 @@ type Actor struct {
 
 type actorInterface interface {
 	Printf(string, ...interface{}) (int, error)
-	React(string, func(Message))
+	React(string, func(Message)) *Actor
 	configuration() map[string]func(Message)
 	Mailbox() chan Message
 	setMailbox(chan Message)
@@ -32,12 +32,14 @@ func (actor *Actor) Stringer() string {
 	return actor.name
 }
 
-func (actor *Actor) React(messageType string, f func(Message)) {
+func (actor *Actor) React(messageType string, f func(Message)) *Actor {
 	if actor.conf == nil {
 		actor.conf = make(map[string]func(Message))
 	}
 
 	actor.conf[messageType] = f
+
+	return actor
 }
 
 func (actor *Actor) configuration() map[string]func(Message) {

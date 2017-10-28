@@ -27,9 +27,9 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface) erro
 	}
 
 	actor.setName(name)
-	actorRef := &ActorRef{name}
-	system.actorNames[name] = *actorRef
-	system.actors[*actorRef] = actor
+	actorRef := ActorRef{name}
+	system.actorNames[name] = actorRef
+	system.actors[actorRef] = actor
 
 	actor.setMailbox(make(chan Message))
 	go receive(actor)
