@@ -34,7 +34,7 @@ func TestBasic(t *testing.T) {
 	childActorRef, _ := ActorSystem().Actor("childActor")
 
 	//Send a message from the parent to the child actor
-	childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
+	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 }
 
 func TestStatefulness(t *testing.T) {
@@ -55,12 +55,12 @@ func TestStatefulness(t *testing.T) {
 		name := message.Data.(string)
 
 		if _, ok := childActor.hello[name]; ok {
-			message.Sender.Tell("error", "I already know you!", message.Self)
-			childActor.Parent().Tell("help", "Daddy help me!", message.Self)
+			message.Sender.Send("error", "I already know you!", message.Self)
+			childActor.Parent().Send("help", "Daddy help me!", message.Self)
 			childActor.Close()
 		} else {
 			childActor.hello[message.Data.(string)] = true
-			message.Sender.Tell("helloback", "hello "+name+"!", message.Self)
+			message.Sender.Send("helloback", "hello "+name+"!", message.Self)
 		}
 	})
 	ActorSystem().RegisterActor("child", &childActor, &parentActor)
@@ -68,9 +68,9 @@ func TestStatefulness(t *testing.T) {
 	childActorRef, _ := ActorSystem().Actor("child")
 	parentActorRef, _ := ActorSystem().Actor("parent")
 
-	childActorRef.Tell("hello", "teivah", parentActorRef)
-	childActorRef.Tell("hello", "teivah", parentActorRef)
+	childActorRef.Send("hello", "teivah", parentActorRef)
+	childActorRef.Send("hello", "teivah", parentActorRef)
 
 	time.Sleep(1 * time.Second)
-	childActorRef.Tell("hello", "teivah2", parentActorRef)
+	childActorRef.Send("hello", "teivah2", parentActorRef)
 }

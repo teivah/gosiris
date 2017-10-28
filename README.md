@@ -26,7 +26,7 @@ parentActorRef, _ := ActorSystem().Actor("parentActor")
 childActorRef, _ := ActorSystem().Actor("childActor")
 
 //Send a message from the parent to the child actor
-childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
+childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 ```
 
 ```
