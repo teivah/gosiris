@@ -15,6 +15,6 @@ func receive(actor actorInterface) {
 	c := actor.Mailbox()
 	for {
 		p := <-c
-		actor.Configuration()[p.messageType](p)
+		actor.configuration()[p.messageType](p)
 	}
 }

@@ -8,7 +8,7 @@ type Actor struct {
 
 type actorInterface interface {
 	React(string, func(Message))
-	Configuration() map[string]func(Message)
+	configuration() map[string]func(Message)
 	Mailbox() chan Message
 	setMailbox(chan Message)
 }
@@ -25,7 +25,7 @@ func (actor *Actor) React(messageType string, f func(Message)) {
 	actor.conf[messageType] = f
 }
 
-func (actor *Actor) Configuration() map[string]func(Message) {
+func (actor *Actor) configuration() map[string]func(Message) {
 	return actor.conf
 }
 
