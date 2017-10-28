@@ -22,6 +22,13 @@ func init() {
 }
 
 func TestStatefulness(t *testing.T) {
+	parentActor.React("helloback", func(message Message) {
+		parentActor.Printf("Receive response %v\n", message.Data)
+	}).React("error", func(message Message) {
+		parentActor.Printf("Receive response %v\n", message.Data)
+	})
+	ActorSystem().RegisterActor("parent", &parentActor, Root())
+
 	childActor.React("hello", func(message Message) {
 		childActor.Printf("Receive request %v\n", message.Data)
 
@@ -35,14 +42,7 @@ func TestStatefulness(t *testing.T) {
 			message.Sender.Tell("helloback", "hello "+name+"!", message.Self)
 		}
 	})
-	ActorSystem().RegisterActor("child", &childActor)
-
-	parentActor.React("helloback", func(message Message) {
-		parentActor.Printf("Receive response %v\n", message.Data)
-	}).React("error", func(message Message) {
-		parentActor.Printf("Receive response %v\n", message.Data)
-	})
-	ActorSystem().RegisterActor("parent", &parentActor)
+	ActorSystem().RegisterActor("child", &childActor, &parentActor)
 
 	childActorRef, _ := ActorSystem().Actor("child")
 	parentActorRef, _ := ActorSystem().Actor("parent")

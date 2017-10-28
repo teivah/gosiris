@@ -20,14 +20,16 @@ type actorSystem struct {
 	actors     map[actorRefInterface]actorInterface
 }
 
-func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
+func (system *actorSystem) RegisterActor(name string, actor actorInterface, parent actorInterface) error {
 	_, exists := system.actorNames[name]
 	if exists {
 		return fmt.Errorf("Actor %v already registered")
 	}
 
 	actor.setName(name)
-	actorRef := ActorRef{name}
+	actor.setParent(parent)
+	actorRef :=
+		ActorRef{name}
 	system.actorNames[name] = actorRef
 	system.actors[actorRef] = actor
 

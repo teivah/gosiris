@@ -4,10 +4,17 @@ import (
 	"fmt"
 )
 
+var root = &Actor{}
+
+func Root() *Actor {
+	return root
+}
+
 type Actor struct {
 	name    string
 	conf    map[string]func(Message)
 	mailbox chan Message
+	parent  actorInterface
 }
 
 type actorInterface interface {
@@ -17,6 +24,8 @@ type actorInterface interface {
 	Mailbox() chan Message
 	setMailbox(chan Message)
 	setName(string)
+	setParent(actorInterface)
+	Parent() actorRefInterface
 	Close()
 }
 
@@ -56,4 +65,13 @@ func (actor *Actor) setMailbox(mailbox chan Message) {
 
 func (actor *Actor) setName(name string) {
 	actor.name = name
+}
+
+func (actor *Actor) setParent(parent actorInterface) {
+	actor.parent = parent
+}
+
+func (actor *Actor) Parent() actorRefInterface {
+	parent, _ := ActorSystem().Actor(actor.name)
+	return parent
 }
