@@ -7,23 +7,26 @@ Just like [Akka](https://akka.io/) for example, Gofast implements a hierarchy co
 A hello world example would be the following:
 
 ```go
-gofast
+//Create a simple parent actor
 parentActor := Actor{}
-gofast
+//Register the parent actor
 ActorSystem().RegisterActor("parentActor", &parentActor, Root())
 
-gofast
+//Create a simple child actor
 childActor := Actor{}
 //Register the reactions to event types (here a reaction to message)
 childActor.React("message", func(message Message) {
 	childActor.Printf("Received %v\n", message.Data)
 })
-gofast
+//Register the child actor
 ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
 
-gofast
+//Retrieve the parent and child actor reference
 parentActorRef, _ := ActorSystem().Actor("parentActor")
 childActorRef, _ := ActorSystem().Actor("childActor")
+
+//Send a message from the parent to the child actor
+childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
 ```
 
 ```
