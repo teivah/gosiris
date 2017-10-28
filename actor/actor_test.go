@@ -2,31 +2,52 @@ package actor
 
 import (
 	"testing"
-	"Test/src/actor"
 	"fmt"
 	"time"
 )
 
+type ParentActor struct {
+	Actor
+}
 
-func TestRequestReply(t *testing.T) {
-	child := &actor.Actor{}
-	child.React("hello", func(message actor.Message) {
+type ChildActor struct {
+	Actor
+	hello map[string]bool
+}
+
+var parentActor ParentActor
+var childActor ChildActor
+
+func init() {
+	childActor.hello = make(map[string]bool)
+}
+
+func TestStatefulness(t *testing.T) {
+	childActor.React("hello", func(message Message) {
 		fmt.Printf("Child: receive %v\n", message.Data)
-		message.Sender.Tell("response", "hello teivah!", message.Self)
-	})
-	child.Build("child")
 
-	parent := &actor.Actor{}
-	parent.React("response", func(message actor.Message) {
+		name := message.Data.(string)
+
+		if _, ok := childActor.hello[name]; ok {
+			message.Sender.Tell("error", "I already know you!", message.Self)
+		} else {
+			childActor.hello[message.Data.(string)] = true
+			message.Sender.Tell("helloback", "hello " + name + "!", message.Self)
+		}
+	})
+	childActor.Build("child")
+
+	parentActor.React("helloback", func(message Message) {
 		fmt.Printf("Parent: receive response %v\n", message.Data)
 	})
-	parent.Build("parent")
+	parentActor.React("error", func(message Message) {
+		fmt.Printf("Parent: receive response %v\n", message.Data)
+	})
 
-	err := child.Tell("hello", "teivah", parent)
+	parentActor.Build("parent")
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	childActor.Tell("hello", "teivah", &parentActor)
+	childActor.Tell("hello", "teivah", &parentActor)
 
 	time.Sleep(1000)
 }

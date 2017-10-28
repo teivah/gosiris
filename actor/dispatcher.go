@@ -13,7 +13,8 @@ func dispatch(messageType string, data interface{}, actor actorInterface, sender
 
 func receive(actor actorInterface) {
 	c := actor.Channel()
-	p := <-c
-
-	actor.Configuration()[p.messageType](p)
+	for {
+		p := <-c
+		actor.Configuration()[p.messageType](p)
+	}
 }
