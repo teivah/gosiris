@@ -6,7 +6,7 @@ import (
 
 var root = &Actor{}
 
-func Root() *Actor {
+func RootActor() *Actor {
 	return root
 }
 
@@ -28,6 +28,7 @@ type actorInterface interface {
 	Parent() ActorRefInterface
 	Name() string
 	Close()
+	Forward(Message, ...string)
 }
 
 func (actor *Actor) Close() {
@@ -79,4 +80,14 @@ func (actor *Actor) Parent() ActorRefInterface {
 
 func (actor *Actor) Name() string {
 	return actor.name
+}
+
+func (actor *Actor) Forward(message Message, destinations ...string) {
+	for _, v := range destinations {
+		actorRef, err := ActorSystem().Actor(v)
+		if err != nil {
+			fmt.Errorf("Actor %v is not part of the actor system", v)
+		}
+		actorRef.Send(message.messageType, message.Data, message.Sender)
+	}
 }

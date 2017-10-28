@@ -18,7 +18,7 @@ func TestBasic(t *testing.T) {
 	//Create a simple parent actor
 	parentActor := Actor{}
 	//Register the parent actor
-	ActorSystem().RegisterActor("parentActor", &parentActor, Root())
+	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	//Create a simple child actor
 	childActor := Actor{}
@@ -27,7 +27,7 @@ func TestBasic(t *testing.T) {
 		childActor.Printf("Received %v\n", message.Data)
 	})
 	//Register the child actor
-	ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
 	//Retrieve the parent and child actor reference
 	parentActorRef, _ := ActorSystem().Actor("parentActor")
@@ -47,7 +47,7 @@ func TestStatefulness(t *testing.T) {
 	}
 
 	parentActor.React("helloback", f).React("error", f).React("help", f)
-	ActorSystem().RegisterActor("parent", &parentActor, Root())
+	ActorSystem().RegisterActor("parent", &parentActor)
 
 	childActor.React("hello", func(message Message) {
 		childActor.Printf("Receive request %v\n", message.Data)
@@ -63,7 +63,7 @@ func TestStatefulness(t *testing.T) {
 			message.Sender.Send("helloback", "hello "+name+"!", message.Self)
 		}
 	})
-	ActorSystem().RegisterActor("child", &childActor, &parentActor)
+	ActorSystem().SpawnActor(&parentActor, "child", &childActor)
 
 	childActorRef, _ := ActorSystem().Actor("child")
 	parentActorRef, _ := ActorSystem().Actor("parent")
@@ -77,19 +77,49 @@ func TestStatefulness(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	parentActor := Actor{}
-	ActorSystem().RegisterActor("parentActor", &parentActor, Root())
+	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	childActor := Actor{}
 	childActor.React("message", func(message Message) {
 		childActor.Printf("Received %v\n", message.Data)
 	})
-	ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
 	parentActorRef, _ := ActorSystem().Actor("parentActor")
 	childActorRef, _ := ActorSystem().Actor("childActor")
 
 	childActorRef.AskForClose(parentActorRef)
-	
+
 	time.Sleep(500 * time.Millisecond)
 	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
+}
+
+func TestForward(t *testing.T) {
+	parentActor := Actor{}
+	ActorSystem().RegisterActor("parentActor", &parentActor)
+
+	forwarderActor := Actor{}
+	forwarderActor.React("message", func(message Message) {
+		forwarderActor.Printf("Received %v\n", message.Data)
+		forwarderActor.Forward(message, "childActor1", "childActor2")
+	})
+	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor)
+
+	childActor1 := Actor{}
+	childActor1.React("message", func(message Message) {
+		childActor1.Printf("Received %v\n", message.Data)
+	})
+	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1)
+
+	childActor2 := Actor{}
+	childActor2.React("message", func(message Message) {
+		childActor2.Printf("Received %v\n", message.Data)
+	})
+	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
+
+	parentActorRef, _ := ActorSystem().Actor("parentActor")
+	forwarderActorRef, _ := ActorSystem().Actor("forwarderActor")
+
+	forwarderActorRef.Send("message", "to be forwarded", parentActorRef)
+	time.Sleep(500 * time.Millisecond)
 }
