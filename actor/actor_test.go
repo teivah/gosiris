@@ -2,7 +2,6 @@ package actor
 
 import (
 	"testing"
-	"fmt"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func init() {
 
 func TestStatefulness(t *testing.T) {
 	childActor.React("hello", func(message Message) {
-		fmt.Printf("Child: receive %v\n", message.Data)
+		childActor.Printf("Receive request %v\n", message.Data)
 
 		name := message.Data.(string)
 
@@ -38,10 +37,10 @@ func TestStatefulness(t *testing.T) {
 	ActorSystem().RegisterActor("child", &childActor)
 
 	parentActor.React("helloback", func(message Message) {
-		fmt.Printf("Parent: receive response %v\n", message.Data)
+		parentActor.Printf("Receive response %v\n", message.Data)
 	})
 	parentActor.React("error", func(message Message) {
-		fmt.Printf("Parent: receive response %v\n", message.Data)
+		parentActor.Printf("Receive response %v\n", message.Data)
 	})
 	ActorSystem().RegisterActor("parent", &parentActor)
 
