@@ -11,16 +11,17 @@ func RootActor() *Actor {
 }
 
 type Actor struct {
-	name    string
-	conf    map[string]func(Message)
-	mailbox chan Message
-	parent  actorInterface
+	name     string
+	conf     map[string]func(Message)
+	mailbox  chan Message
+	parent   actorInterface
+	unbecome map[string]func(Message)
 }
 
 type actorInterface interface {
-	Printf(string, ...interface{}) (int, error)
 	React(string, func(Message)) *Actor
-	configuration() map[string]func(Message)
+	reactions() map[string]func(Message)
+	Unbecome() map[string]func(Message)
 	Mailbox() chan Message
 	setMailbox(chan Message)
 	setName(string)
@@ -35,10 +36,6 @@ func (actor *Actor) Close() {
 	close(actor.mailbox)
 }
 
-func (actor *Actor) Printf(format string, a ...interface{}) (n int, err error) {
-	return fmt.Printf("["+actor.name+"] "+format, a...)
-}
-
 func (actor *Actor) Stringer() string {
 	return actor.name
 }
@@ -46,6 +43,7 @@ func (actor *Actor) Stringer() string {
 func (actor *Actor) React(messageType string, f func(Message)) *Actor {
 	if actor.conf == nil {
 		actor.conf = make(map[string]func(Message))
+		actor.unbecome = make(map[string]func(Message))
 	}
 
 	actor.conf[messageType] = f
@@ -53,8 +51,12 @@ func (actor *Actor) React(messageType string, f func(Message)) *Actor {
 	return actor
 }
 
-func (actor *Actor) configuration() map[string]func(Message) {
+func (actor *Actor) reactions() map[string]func(Message) {
 	return actor.conf
+}
+
+func (actor *Actor) Unbecome() map[string]func(Message) {
+	return actor.unbecome
 }
 
 func (actor *Actor) Mailbox() chan Message {

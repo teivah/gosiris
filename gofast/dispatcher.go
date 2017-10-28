@@ -20,7 +20,7 @@ func PoisonPill() Message {
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Recovered in f", r)
+			fmt.Println("Recovered2 in f", r)
 		}
 	}()
 
@@ -32,7 +32,7 @@ func receive(actor actorInterface) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Recovered in f", r)
+			fmt.Println("Recovered1 in f", r)
 		}
 	}()
 
@@ -44,7 +44,7 @@ func receive(actor actorInterface) {
 				return
 			}
 
-			f, exists := actor.configuration()[p.messageType]
+			f, exists := actor.reactions()[p.messageType]
 			if exists {
 				f(p)
 			}

@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 	childActor := Actor{}
 	//Register the reactions to event types (here a reaction to message)
 	childActor.React("message", func(message Message) {
-		childActor.Printf("Received %v\n", message.Data)
+		message.Self.Printf("Received %v\n", message.Data)
 	})
 	//Register the child actor
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
@@ -43,14 +43,14 @@ func TestStatefulness(t *testing.T) {
 	parentActor := ParentActor{}
 
 	f := func(message Message) {
-		parentActor.Printf("Receive response %v\n", message.Data)
+		message.Self.Printf("Receive response %v\n", message.Data)
 	}
 
 	parentActor.React("helloback", f).React("error", f).React("help", f)
 	ActorSystem().RegisterActor("parent", &parentActor)
 
 	childActor.React("hello", func(message Message) {
-		childActor.Printf("Receive request %v\n", message.Data)
+		message.Self.Printf("Receive request %v\n", message.Data)
 
 		name := message.Data.(string)
 
@@ -81,7 +81,7 @@ func TestClose(t *testing.T) {
 
 	childActor := Actor{}
 	childActor.React("message", func(message Message) {
-		childActor.Printf("Received %v\n", message.Data)
+		message.Self.Printf("Received %v\n", message.Data)
 	})
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
@@ -100,20 +100,20 @@ func TestForward(t *testing.T) {
 
 	forwarderActor := Actor{}
 	forwarderActor.React("message", func(message Message) {
-		forwarderActor.Printf("Received %v\n", message.Data)
+		message.Self.Printf("Received %v\n", message.Data)
 		forwarderActor.Forward(message, "childActor1", "childActor2")
 	})
 	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor)
 
 	childActor1 := Actor{}
 	childActor1.React("message", func(message Message) {
-		childActor1.Printf("Received %v from %v\n", message.Data, message.Sender)
+		message.Self.Printf("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1)
 
 	childActor2 := Actor{}
 	childActor2.React("message", func(message Message) {
-		childActor2.Printf("Received %v from %v\n", message.Data, message.Sender)
+		message.Self.Printf("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
 
@@ -122,4 +122,40 @@ func TestForward(t *testing.T) {
 
 	forwarderActorRef.Send("message", "to be forwarded", parentActorRef)
 	time.Sleep(500 * time.Millisecond)
+}
+
+func TestBecomeUnbecome(t *testing.T) {
+	angry := func(message Message) {
+		if message.Data == "happy" {
+			message.Self.Printf("Unbecome\n")
+			message.Self.Unbecome(message.messageType)
+		} else {
+			message.Self.Printf("Angrily receiving %v\n", message.Data)
+		}
+	}
+
+	happy := func(message Message) {
+		if message.Data == "angry" {
+			message.Self.Printf("I need to become angry\n")
+			message.Self.Become(message.messageType, angry)
+		} else {
+			message.Self.Printf("Happily receiving %v\n", message.Data)
+		}
+	}
+
+	parentActor := Actor{}
+	ActorSystem().RegisterActor("parentActor", &parentActor)
+
+	childActor := Actor{}
+	childActor.React("message", happy)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
+
+	parentActorRef, _ := ActorSystem().Actor("parentActor")
+	childActorRef, _ := ActorSystem().Actor("childActor")
+
+	childActorRef.Send("message", "hello!", parentActorRef)
+	childActorRef.Send("message", "angry", parentActorRef)
+	childActorRef.Send("message", "hello!", parentActorRef)
+	childActorRef.Send("message", "happy", parentActorRef)
+	childActorRef.Send("message", "hello!", parentActorRef)
 }
