@@ -16,7 +16,7 @@ gofast
 childActor := Actor{}
 //Register the reactions to event types (here a reaction to message)
 childActor.React("message", func(message Message) {
-	childActor.Printf("Received %v", message.Data)
+	childActor.Printf("Received %v\n", message.Data)
 })
 gofast
 ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
@@ -24,6 +24,10 @@ ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
 gofast
 parentActorRef, _ := ActorSystem().Actor("parentActor")
 childActorRef, _ := ActorSystem().Actor("childActor")
+```
+
+```
+[childActor] Received [Hi! How are you?]
 ```
 
 We would like to add many other features like the capacity to distribute actors across the network etc. If you want to participate, contact me [@teivah](https://twitter.com/teivah)

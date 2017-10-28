@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 	childActor := Actor{}
 	//Register the reactions to event types (here a reaction to message)
 	childActor.React("message", func(message Message) {
-		childActor.Printf("Received %v", message.Data)
+		childActor.Printf("Received %v\n", message.Data)
 	})
 	//Register the child actor
 	ActorSystem().RegisterActor("childActor", &childActor, &parentActor)
