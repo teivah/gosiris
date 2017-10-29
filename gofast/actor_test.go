@@ -14,6 +14,10 @@ type ChildActor struct {
 	hello map[string]bool
 }
 
+func init() {
+	InitActorSystem()
+}
+
 func TestBasic(t *testing.T) {
 	//Create a simple parent actor
 	parentActor := Actor{}

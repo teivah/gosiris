@@ -6,14 +6,18 @@ import (
 	"Gofast/gofast/util"
 )
 
-var actorSystemInstance actorSystem = actorSystem{}
+var actorSystemInstance actorSystem
 var infoLogger *log.Logger
 var errorLogger *log.Logger
 
 func init() {
+	infoLogger, errorLogger = util.NewSystemLogger()
+}
+
+func InitActorSystem() {
+	actorSystemInstance = actorSystem{}
 	actorSystemInstance.actorNames = make(map[string]ActorRefInterface)
 	actorSystemInstance.actors = make(map[ActorRefInterface]actorInterface)
-	infoLogger, errorLogger = util.NewSystemLogger()
 }
 
 func ActorSystem() *actorSystem {
