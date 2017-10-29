@@ -5,9 +5,10 @@ import (
 )
 
 func TestPublish(t *testing.T) {
-	InitConfiguration("amqp://guest:guest@amqp:5672/")
+	r := RemoteAmqp{}
+	r.InitConnection("amqp://guest:guest@amqp:5672/")
 
-	Publish("test")
+	r.Send("test")
 
-	AddConsumer("test")
+	r.Receive("test")
 }

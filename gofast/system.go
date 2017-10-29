@@ -3,7 +3,6 @@ package gofast
 import (
 	"fmt"
 	"Gofast/gofast/util"
-	"Gofast/gofast/etcd"
 )
 
 var actorSystemInstance actorSystem
@@ -13,14 +12,21 @@ func InitLocalActorSystem() {
 	actorSystemInstance.actors = make(map[string]actorAssociation)
 }
 
-func InitRemoteActorSystem(endpoints ...string) {
+func InitRemoteActorSystem(remote RemoteInterface) {
 	InitLocalActorSystem()
 
-	etcd.InitConfiguration(endpoints...)
+	//etcd.InitConfiguration(endpoints...)
 }
 
 func ActorSystem() *actorSystem {
 	return &actorSystemInstance
+}
+
+type RemoteInterface interface {
+	InitConnection(string)
+	Send(string)
+	Receive(string)
+	Close()
 }
 
 type actorAssociation struct {

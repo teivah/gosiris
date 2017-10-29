@@ -1,13 +1,10 @@
 package amqp
 
 import (
-	"github.com/streadway/amqp"
 	"fmt"
 	"Gofast/gofast/util"
+	"github.com/streadway/amqp"
 )
-
-var connection *amqp.Connection
-var channel *amqp.Channel
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -16,18 +13,23 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func InitConfiguration(endpoint string) {
-	c, err := amqp.Dial(endpoint)
-	failOnError(err, "Failed to connect to RabbitMQ")
-	connection = c
-
-	ch, err := connection.Channel()
-	failOnError(err, "Failed to open a channel")
-	channel = ch
+type RemoteAmqp struct {
+	connection *amqp.Connection
+	channel    *amqp.Channel
 }
 
-func AddConsumer(queueName string) {
-	q, err := channel.QueueDeclare(
+func (remoteAmqp *RemoteAmqp) InitConnection(connection string) {
+	c, err := amqp.Dial(connection)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	remoteAmqp.connection = c
+
+	ch, err := c.Channel()
+	failOnError(err, "Failed to open a channel")
+	remoteAmqp.channel = ch
+}
+
+func (remoteAmqp *RemoteAmqp) Receive(queueName string) {
+	q, err := remoteAmqp.channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
 		false,     // delete when unused
@@ -39,7 +41,7 @@ func AddConsumer(queueName string) {
 		util.LogError("Error while declaring queue %v: %v", queueName, err)
 	}
 
-	msgs, err := channel.Consume(
+	msgs, err := remoteAmqp.channel.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack
@@ -56,26 +58,26 @@ func AddConsumer(queueName string) {
 	}()
 }
 
-func Close() {
-	channel.Close()
-	connection.Close()
+func (remoteAmqp *RemoteAmqp) Close() {
+	remoteAmqp.channel.Close()
+	remoteAmqp.connection.Close()
 }
 
-func Publish(queueName string) {
-	q, err := channel.QueueDeclare(
-		queueName, // name
-		false,     // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+func (remoteAmqp *RemoteAmqp) Send(destination string) {
+	q, err := remoteAmqp.channel.QueueDeclare(
+		destination, // name
+		false,       // durable
+		false,       // delete when unused
+		false,       // exclusive
+		false,       // no-wait
+		nil,         // arguments
 	)
 	if err != nil {
-		util.LogError("Error while declaring queue %v: %v", queueName, err)
+		util.LogError("Error while declaring queue %v: %v", destination, err)
 	}
 
 	body := "hello"
-	err = channel.Publish(
+	err = remoteAmqp.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
@@ -86,6 +88,6 @@ func Publish(queueName string) {
 		})
 
 	if err != nil {
-		util.LogError("Error while publishing a message to queue %v: %v", queueName, err)
+		util.LogError("Error while publishing a message to queue %v: %v", destination, err)
 	}
 }

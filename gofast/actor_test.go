@@ -3,6 +3,7 @@ package gofast
 import (
 	"testing"
 	"time"
+	"Gofast/gofast/amqp"
 )
 
 type ParentActor struct {
@@ -15,7 +16,9 @@ type ChildActor struct {
 }
 
 func init() {
-	InitRemoteActorSystem("http://etcd:2379")
+	r := amqp.RemoteAmqp{}
+	r.InitConnection("amqp://guest:guest@amqp:5672/")
+	InitRemoteActorSystem(&r)
 }
 
 func TestBasic(t *testing.T) {
@@ -179,6 +182,7 @@ func TestBecomeUnbecome(t *testing.T) {
 }
 
 func TestNewRemoteActor(t *testing.T) {
-	//parentActor := RemoteActor{}
+	actor1 := RemoteActor{}
+	ActorSystem().RegisterActor("actor1", &actor1, new(ActorOptions).ConnectionAlias("a").Endpoint("actor1"))
 
 }
