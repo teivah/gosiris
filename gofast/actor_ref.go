@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"Gofast/gofast/util"
+	"encoding/json"
 )
 
 type ActorRef struct {
@@ -20,6 +21,12 @@ type ActorRefInterface interface {
 	Become(string, func(Message)) error
 	Unbecome(string) error
 	Name() string
+}
+
+func (ref ActorRef) MarshalJSON() ([]byte, error) {
+	m := make(map[string]string)
+	m["name"] = ref.name
+	return json.Marshal(m)
 }
 
 func newActorRef(name string) ActorRefInterface {

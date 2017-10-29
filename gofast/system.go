@@ -122,3 +122,25 @@ func (system *actorSystem) DistributedConfiguration(connectionAlias string) Dist
 	v, _ := distributedActorConfiguration[connectionAlias]
 	return v
 }
+
+func (system *actorSystem) Invoke(message Message) error {
+	actorAssociation, err := system.actor(message.Self.Name())
+
+	if err != nil {
+		util.LogError("Actor %v not registered")
+		return err
+	}
+
+	if message.messageType == poisonPill {
+		util.LogInfo("Actor %v has received a poison pill", actorAssociation.actor.Name())
+		actorAssociation.actor.Close()
+		return nil
+	}
+
+	f, exists := actorAssociation.actor.reactions()[message.messageType]
+	if exists {
+		f(message)
+	}
+
+	return nil
+}
