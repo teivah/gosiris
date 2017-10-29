@@ -3,12 +3,12 @@
 gofast is a simple library to bring the actor model on top of Golang.
 
 ## Features
-* Send message from one actor to another using the mailbox principle
-* Forward message to maintain the original sender
-* Hierarchy concept between the different actors
-* Become/unbecome principle to modify at runtime the behavior of an actor
-* Capacity to gracefully ask an actor to stop its execution
-* Distributed actor system across the network using an AMQP broker
+* Send message from one actor to another using the **mailbox** principle
+* **Forward** message to maintain the original sender
+* **Hierarchy** concept between the different actors
+* **Become/unbecome** principle to modify at runtime the behavior of an actor
+* Capacity to gracefully ask an actor to **stop** its execution
+* **Distributed actor system** across the network using an **AMQP broker**
 
 ## Hello world
 The gofast hello world is the following:
