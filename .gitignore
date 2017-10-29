@@ -4,6 +4,10 @@
 *.so
 *.dylib
 
+/vendor/*
+Gopkg.lock
+
+
 # Test binary, build with `go test -c`
 *.test
 
