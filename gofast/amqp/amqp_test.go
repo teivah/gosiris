@@ -1,7 +1,13 @@
 package amqp
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestConnection(t *testing.T) {
+func TestPublish(t *testing.T) {
 	InitConfiguration("amqp://guest:guest@amqp:5672/")
+
+	Publish("test")
+
+	AddConsumer("test")
 }

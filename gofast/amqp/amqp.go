@@ -26,33 +26,66 @@ func InitConfiguration(endpoint string) {
 	channel = ch
 }
 
+func AddConsumer(queueName string) {
+	q, err := channel.QueueDeclare(
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		util.LogError("Error while declaring queue %v: %v", queueName, err)
+	}
+
+	msgs, err := channel.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+
+	go func() {
+		for d := range msgs {
+			fmt.Printf("Received a message: %s", d.Body)
+		}
+	}()
+}
+
 func Close() {
 	channel.Close()
 	connection.Close()
 }
 
-func Publish() {
-	//q, err := ch.QueueDeclare(
-	//	"hello", // name
-	//	false,   // durable
-	//	false,   // delete when unused
-	//	false,   // exclusive
-	//	false,   // no-wait
-	//	nil,     // arguments
-	//)
-	//if err != nil {
-	//	util.errorLogger.Printf()
-	//}
-	//
-	//body := "hello"
-	//err = ch.Publish(
-	//	"",     // exchange
-	//	q.Name, // routing key
-	//	false,  // mandatory
-	//	false,  // immediate
-	//	amqp.Publishing{
-	//		ContentType: "text/plain",
-	//		Body:        []byte(body),
-	//	})
-	//failOnError(err, "Failed to publish a message")
+func Publish(queueName string) {
+	q, err := channel.QueueDeclare(
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		util.LogError("Error while declaring queue %v: %v", queueName, err)
+	}
+
+	body := "hello"
+	err = channel.Publish(
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+
+	if err != nil {
+		util.LogError("Error while publishing a message to queue %v: %v", queueName, err)
+	}
 }
