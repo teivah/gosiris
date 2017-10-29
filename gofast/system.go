@@ -14,18 +14,24 @@ func InitLocalActorSystem() {
 	remoteConfiguration = make(map[string]RemoteInterface)
 }
 
-func InitRemoteActorSystem(remote ... RemoteInterface) {
+func InitDistributedActorSystem(remote ... RemoteInterface) error {
 	InitLocalActorSystem()
 
 	for _, v := range remote {
 		alias := v.ConnectionAlias()
 		_, exists := remoteConfiguration[alias]
 		if !exists {
-			v.Connection()
+			err := v.Connection()
+			if err != nil {
+				util.LogFatal("Failed to create the distributed actor system: %v", err)
+				return err
+			}
 		}
 	}
 
 	//etcd.InitConfiguration(endpoints...)
+
+	return nil
 }
 
 func ActorSystem() *actorSystem {

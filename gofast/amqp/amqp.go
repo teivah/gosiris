@@ -33,6 +33,8 @@ func (remoteAmqp *RemoteAmqp) Connection() error {
 	}
 	remoteAmqp.channel = ch
 
+	util.LogInfo("Connected to %v", remoteAmqp.url)
+
 	return nil
 }
 
