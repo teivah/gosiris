@@ -23,6 +23,7 @@ func init() {
 func TestBasic(t *testing.T) {
 	//Create a simple parent actor
 	parentActor := Actor{}
+	//Close the actor
 	defer parentActor.Close()
 
 	//Register the parent actor
@@ -30,6 +31,7 @@ func TestBasic(t *testing.T) {
 
 	//Create a simple child actor
 	childActor := Actor{}
+	//Close the actor
 	defer childActor.Close()
 
 	//Register the reactions to event types (here a reaction to message)
@@ -181,14 +183,22 @@ func TestBecomeUnbecome(t *testing.T) {
 }
 
 func TestNewRemoteActor(t *testing.T) {
-	ActorSystem().RegisterActor("actor1", new(Actor), new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor1"))
-	ActorSystem().RegisterActor("actor2", new(Actor).React("message", func(message Message) {
+	actor1 := new(Actor).React("reply", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
-	}), new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor2"))
+	})
+	defer actor1.Close()
+	ActorSystem().RegisterActor("actor1", actor1, new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor1"))
 
-	actor1, _ := ActorSystem().ActorOf("actor1")
-	actor2, _ := ActorSystem().ActorOf("actor2")
+	actor2 := new(Actor).React("message", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+		message.Sender.Send("reply", "hello back", message.Self)
+	})
+	defer actor2.Close()
+	ActorSystem().RegisterActor("actor2", actor2, new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor2"))
 
-	actor2.Send("message", "hello", actor1)
+	actorRef1, _ := ActorSystem().ActorOf("actor1")
+	actorRef2, _ := ActorSystem().ActorOf("actor2")
+
+	actorRef2.Send("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)
 }

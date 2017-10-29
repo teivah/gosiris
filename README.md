@@ -16,21 +16,28 @@ The gofast hello world is the following:
 ```go
 //Create a simple parent actor
 parentActor := Actor{}
+//Close the actor
+defer parentActor.Close()
+
 //Register the parent actor
-ActorSystem().RegisterActor("parentActor", &parentActor)
+ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 
 //Create a simple child actor
 childActor := Actor{}
+//Close the actor
+defer childActor.Close()
+
 //Register the reactions to event types (here a reaction to message)
 childActor.React("message", func(message Message) {
-	message.Self.Printf("Received %v\n", message.Data)
+    message.Self.LogInfo("Received %v\n", message.Data)
 })
+
 //Register the child actor
-ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
+ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
 //Retrieve the parent and child actor reference
-parentActorRef, _ := ActorSystem().Actor("parentActor")
-childActorRef, _ := ActorSystem().Actor("childActor")
+parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+childActorRef, _ := ActorSystem().ActorOf("childActor")
 
 //Send a message from the parent to the child actor
 childActorRef.Send("message", "Hi! How are you?", parentActorRef)
