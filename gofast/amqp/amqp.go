@@ -6,26 +6,34 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		util.LogFatal("%v: %v", msg, err)
-		panic(fmt.Sprintf("%v: %v", msg, err))
-	}
-}
-
 type RemoteAmqp struct {
-	connection *amqp.Connection
-	channel    *amqp.Channel
+	connectionAlias string
+	url             string
+	connection      *amqp.Connection
+	channel         *amqp.Channel
 }
 
-func (remoteAmqp *RemoteAmqp) InitConnection(connection string) {
-	c, err := amqp.Dial(connection)
-	failOnError(err, "Failed to connect to RabbitMQ")
+func (remoteAmqp *RemoteAmqp) Configure(connectionAlias string, url string) {
+	remoteAmqp.connectionAlias = connectionAlias
+	remoteAmqp.url = url
+}
+
+func (remoteAmqp *RemoteAmqp) Connection() error {
+	c, err := amqp.Dial(remoteAmqp.url)
+	if err != nil {
+		util.LogError("Failed to connect to the AMQP server %v", remoteAmqp.url)
+		return err
+	}
 	remoteAmqp.connection = c
 
 	ch, err := c.Channel()
-	failOnError(err, "Failed to open a channel")
+	if err != nil {
+		util.LogError("Failed to open an AMQP channel on the server %v", remoteAmqp.url)
+		return err
+	}
 	remoteAmqp.channel = ch
+
+	return nil
 }
 
 func (remoteAmqp *RemoteAmqp) Receive(queueName string) {
@@ -90,4 +98,8 @@ func (remoteAmqp *RemoteAmqp) Send(destination string) {
 	if err != nil {
 		util.LogError("Error while publishing a message to queue %v: %v", destination, err)
 	}
+}
+
+func (remoteAmqp *RemoteAmqp) ConnectionAlias() string {
+	return remoteAmqp.connectionAlias
 }

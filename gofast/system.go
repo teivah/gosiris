@@ -6,14 +6,24 @@ import (
 )
 
 var actorSystemInstance actorSystem
+var remoteConfiguration map[string]RemoteInterface
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
 	actorSystemInstance.actors = make(map[string]actorAssociation)
+	remoteConfiguration = make(map[string]RemoteInterface)
 }
 
-func InitRemoteActorSystem(remote RemoteInterface) {
+func InitRemoteActorSystem(remote ... RemoteInterface) {
 	InitLocalActorSystem()
+
+	for _, v := range remote {
+		alias := v.ConnectionAlias()
+		_, exists := remoteConfiguration[alias]
+		if !exists {
+			v.Connection()
+		}
+	}
 
 	//etcd.InitConfiguration(endpoints...)
 }
@@ -23,10 +33,12 @@ func ActorSystem() *actorSystem {
 }
 
 type RemoteInterface interface {
-	InitConnection(string)
+	Configure(string, string)
+	Connection() error
 	Send(string)
 	Receive(string)
 	Close()
+	ConnectionAlias() string
 }
 
 type actorAssociation struct {
