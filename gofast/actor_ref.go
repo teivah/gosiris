@@ -51,12 +51,12 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 }
 
 func (ref ActorRef) AskForClose(sender ActorRefInterface) {
-	infoLogger.Printf("Asking to close %v", ref.name)
+	util.InfoLogger.Printf("Asking to close %v", ref.name)
 
 	actor, err := ActorSystem().actor(ref)
 
 	if err != nil {
-		infoLogger.Printf("Actor %v already closed", ref.name)
+		util.InfoLogger.Printf("Actor %v already closed", ref.name)
 		return
 	}
 
