@@ -1,14 +1,14 @@
 package gofast
 
 type ActorOptions struct {
-	local           bool
-	connectionAlias string
-	endpoint        string
+	local       bool
+	serverAlias string
+	endpoint    string
 }
 
 type OptionsInterface interface {
 	Local(bool) OptionsInterface
-	ConnectionAlias(string) OptionsInterface
+	ServerAlias(string) OptionsInterface
 	Endpoint(string) OptionsInterface
 }
 
@@ -17,8 +17,8 @@ func (options *ActorOptions) Local(b bool) OptionsInterface {
 	return options
 }
 
-func (options *ActorOptions) ConnectionAlias(s string) OptionsInterface {
-	options.connectionAlias = s
+func (options *ActorOptions) ServerAlias(s string) OptionsInterface {
+	options.serverAlias = s
 	return options
 }
 
