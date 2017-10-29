@@ -53,7 +53,8 @@ func (etcdClient *etcdClient) ParseConfiguration() (map[string]OptionsInterface,
 		v := nodes[i].Value
 		a :=
 			strings.Split(v, delimiter)
-		conf[nodes[i].Key] = &ActorOptions{true, a[0], a[1], a[2]}
+		k := nodes[i].Key
+		conf[k[len(actors_configuration):]] = &ActorOptions{true, a[0], a[1], a[2]}
 	}
 
 	return conf, nil

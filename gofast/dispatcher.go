@@ -77,19 +77,19 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 		channel <- m
 		util.LogInfo("Message dispatched to local channel")
 	} else {
-		//d := ActorSystem().DistributedConfiguration(options.ConnectionAlias())
-		//if d == nil {
-		//	util.LogError("remote configuration %v cannot be found", options.ConnectionAlias())
-		//}
-		//
-		//json, err := json.Marshal(m)
-		//if err != nil {
-		//	util.LogError("JSON marshalling error: %v", err)
-		//	return err
-		//}
-		//
-		//d.Send(options.Endpoint(), json)
-		//util.LogInfo("Message dispatched to remote channel %v", options.Endpoint())
+		d, err := RemoteConnection(receiver.Name())
+		if err != nil {
+			return err
+		}
+
+		json, err := json.Marshal(m)
+		if err != nil {
+			util.LogError("JSON marshalling error: %v", err)
+			return err
+		}
+
+		d.Send(options.Destination(), json)
+		util.LogInfo("Message dispatched to remote channel %v", options.Destination())
 	}
 
 	return nil
@@ -111,11 +111,11 @@ func receive(actor actorInterface, options OptionsInterface) {
 			}
 		}
 	} else {
-		//d := ActorSystem().DistributedConfiguration(options.ConnectionAlias())
-		//if d == nil {
-		//	util.LogError("remote configuration %v cannot be found", options.ConnectionAlias())
-		//}
-		//
-		//d.Receive(options.Endpoint())
+		d, err := RemoteConnection(actor.Name())
+		if err != nil {
+			return
+		}
+
+		d.Receive(options.Destination())
 	}
 }

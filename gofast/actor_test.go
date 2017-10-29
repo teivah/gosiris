@@ -185,17 +185,17 @@ func TestNewRemoteActor(t *testing.T) {
 		message.Self.LogInfo("Received %v", message.Data)
 	})
 	defer actor1.Close()
-	ActorSystem().RegisterActor("actor1", actor1, new(ActorOptions).SetRemote(true).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
+	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("message", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
 		message.Sender.Send("reply", "hello back", message.Self)
 	})
 	defer actor2.Close()
-	ActorSystem().RegisterActor("actor2", actor2, new(ActorOptions).SetRemote(true).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
+	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
 
-	actorRef1, _ := ActorSystem().ActorOf("actor1")
-	actorRef2, _ := ActorSystem().ActorOf("actor2")
+	actorRef1, _ := ActorSystem().ActorOf("actorX")
+	actorRef2, _ := ActorSystem().ActorOf("actorY")
 
 	actorRef2.Send("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)

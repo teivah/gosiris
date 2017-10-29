@@ -16,7 +16,6 @@ type RemoteConnectionInterface interface {
 }
 
 func InitRemoteConnections(configuration map[string]OptionsInterface) {
-	fmt.Println("b")
 	manager = make(map[string]RemoteConnectionInterface)
 
 	//TODO Dynamic management
@@ -31,6 +30,8 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 			manager[k] = &c
 		}
 	}
+
+	fmt.Println(manager)
 }
 
 func AddRemoteConnection(name string, conf OptionsInterface) {
@@ -56,7 +57,17 @@ func DeleteConnection(name string) error {
 	v.Close()
 	delete(manager, name)
 
-	util.LogInfo("Connection %v deleted")
+	util.LogInfo("Connection %v deleted", name)
 
 	return nil
+}
+
+func RemoteConnection(name string) (RemoteConnectionInterface, error) {
+	v, exists := manager[name]
+	if !exists {
+		util.LogError("Connection %v not registered", name)
+		return nil, fmt.Errorf("connection %v not registered", name)
+	}
+
+	return v, nil
 }
