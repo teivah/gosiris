@@ -9,6 +9,7 @@ gofast is a simple library to bring the actor model on top of Golang.
 * **Become/unbecome** principle to modify at runtime the behavior of an actor
 * Capacity to gracefully ask an actor to **stop** its execution
 * **Distributed actor system** across the network using an **AMQP broker**
+* Actors **discoverability** using etcd 
 
 ## Hello world
 The gofast hello world is the following:

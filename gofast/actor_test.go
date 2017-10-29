@@ -3,6 +3,7 @@ package gofast
 import (
 	"testing"
 	"time"
+	"fmt"
 )
 
 type ParentActor struct {
@@ -199,4 +200,15 @@ func TestNewRemoteActor(t *testing.T) {
 
 	actorRef2.Send("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)
+}
+
+func TestRemote(t *testing.T) {
+	actorX := new(Actor).React("reply", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+	})
+	defer actorX.Close()
+	ActorSystem().RegisterActor("actorX", actorX, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
+
+	actorRefY, _ := ActorSystem().ActorOf("actorY")
+	fmt.Println(actorRefY)
 }

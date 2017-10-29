@@ -29,6 +29,7 @@ func InitDistributedActorSystem(url ...string) error {
 	}
 
 	InitRemoteConnections(conf)
+	ActorSystem().addRemoteActors(conf)
 
 	return nil
 }
@@ -57,8 +58,8 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 
 	_, exists := system.actors[name]
 	if exists {
-		util.LogInfo("actor %v already registered", name)
-		return fmt.Errorf("actor %v already registered", name)
+		util.LogInfo("Actor %v already registered", name)
+		//return fmt.Errorf("actor %v already registered", name)
 	}
 
 	if options == nil {
@@ -110,6 +111,18 @@ func (system *actorSystem) actor(name string) (actorAssociation, error) {
 	}
 
 	return ref, nil
+}
+
+func (system *actorSystem) addRemoteActors(configuration map[string]OptionsInterface) {
+	for k, v := range configuration {
+		actor := Actor{}
+		actor.setName(k)
+		actorRef := newActorRef(k)
+
+		system.actors[k] = actorAssociation{actorRef, &actor, v}
+	}
+
+	util.LogInfo("Actors configuration: %v", system.actors)
 }
 
 func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {

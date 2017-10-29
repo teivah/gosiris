@@ -24,8 +24,6 @@ type Actor struct {
 
 type RemoteActor struct {
 	Actor
-	connectionAlias string
-	endpoint        string
 }
 
 type actorInterface interface {
@@ -40,15 +38,6 @@ type actorInterface interface {
 	Name() string
 	Close()
 	Forward(Message, ...string)
-}
-
-type remoteActorInterface interface {
-	configure(string, string)
-}
-
-func (remoteActor *RemoteActor) configure(connectionAlias string, endpoint string) {
-	remoteActor.connectionAlias = connectionAlias
-	remoteActor.endpoint = endpoint
 }
 
 func (actor *Actor) Close() {
