@@ -42,10 +42,11 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
+		util.LogError("Failed to send from %v to %v: %v", sender.Name(), ref.name, err)
 		return err
 	}
 
-	dispatch(actor.actor.Mailbox(), messageType, data, &ref, sender)
+	dispatch(actor.actor.Mailbox(), messageType, data, &ref, sender, actor.options)
 
 	return nil
 }
@@ -60,7 +61,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 		return
 	}
 
-	dispatch(actor.actor.Mailbox(), poisonPill, nil, &ref, sender)
+	dispatch(actor.actor.Mailbox(), poisonPill, nil, &ref, sender, actor.options)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {

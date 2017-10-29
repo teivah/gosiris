@@ -182,7 +182,12 @@ func TestBecomeUnbecome(t *testing.T) {
 }
 
 func TestNewRemoteActor(t *testing.T) {
-	actor1 := RemoteActor{}
-	ActorSystem().RegisterActor("actor1", &actor1, new(ActorOptions).ConnectionAlias("a").Endpoint("actor1"))
+	ActorSystem().RegisterActor("actor1", new(Actor), new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor1"))
+	ActorSystem().RegisterActor("actor2", new(Actor), new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor2"))
 
+	actor1, _ := ActorSystem().ActorOf("actor1")
+	actor2, _ := ActorSystem().ActorOf("actor2")
+
+	actor2.Send("message", "hello", actor1)
+	time.Sleep(500 * time.Millisecond)
 }

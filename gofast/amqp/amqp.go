@@ -47,6 +47,7 @@ func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 		false,     // no-wait
 		nil,       // arguments
 	)
+
 	if err != nil {
 		util.LogError("Error while declaring queue %v: %v", queueName, err)
 	}
@@ -60,12 +61,9 @@ func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 		false,  // no-wait
 		nil,    // args
 	)
-
-	go func() {
-		for d := range msgs {
-			fmt.Printf("Received a message: %s", d.Body)
-		}
-	}()
+	for d := range msgs {
+		fmt.Printf("Received a message: %s", d.Body)
+	}
 }
 
 func (remoteAmqp *DistributedAmqp) Close() {
@@ -73,7 +71,7 @@ func (remoteAmqp *DistributedAmqp) Close() {
 	remoteAmqp.connection.Close()
 }
 
-func (remoteAmqp *DistributedAmqp) Send(destination string) {
+func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
 	q, err := remoteAmqp.channel.QueueDeclare(
 		destination, // name
 		false,       // durable
@@ -86,7 +84,8 @@ func (remoteAmqp *DistributedAmqp) Send(destination string) {
 		util.LogError("Error while declaring queue %v: %v", destination, err)
 	}
 
-	body := "hello"
+	body :=
+		string(data)
 	err = remoteAmqp.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key

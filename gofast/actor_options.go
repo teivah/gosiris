@@ -7,22 +7,37 @@ type ActorOptions struct {
 }
 
 type OptionsInterface interface {
-	ServerAlias(string) OptionsInterface
-	ConnectionAlias(string) OptionsInterface
-	Endpoint(string) OptionsInterface
+	SetServerAlias(string) OptionsInterface
+	SetConnectionAlias(string) OptionsInterface
+	SetEndpoint(string) OptionsInterface
+	ServerAlias() string
+	ConnectionAlias() string
+	Endpoint() string
 }
 
-func (options *ActorOptions) ServerAlias(s string) OptionsInterface {
+func (options *ActorOptions) SetServerAlias(s string) OptionsInterface {
 	options.serverAlias = s
 	return options
 }
 
-func (options *ActorOptions) ConnectionAlias(s string) OptionsInterface {
+func (options *ActorOptions) SetConnectionAlias(s string) OptionsInterface {
 	options.connectionAlias = s
 	return options
 }
 
-func (options *ActorOptions) Endpoint(s string) OptionsInterface {
+func (options *ActorOptions) SetEndpoint(s string) OptionsInterface {
 	options.endpoint = s
 	return options
+}
+
+func (options *ActorOptions) ServerAlias() string {
+	return options.serverAlias
+}
+
+func (options *ActorOptions) ConnectionAlias() string {
+	return options.connectionAlias
+}
+
+func (options *ActorOptions) Endpoint() string {
+	return options.endpoint
 }

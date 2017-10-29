@@ -26,7 +26,7 @@ func InitDistributedActorSystem(remote ... DistributedInterface) error {
 				util.LogFatal("Failed to create the distributed actor system: %v", err)
 				return err
 			}
-
+			distributedActorConfiguration[v.ConnectionAlias()] = v
 		}
 	}
 
@@ -42,7 +42,7 @@ func ActorSystem() *actorSystem {
 type DistributedInterface interface {
 	Configure(string, string)
 	Connection() error
-	Send(string)
+	Send(string, []byte)
 	Receive(string)
 	Close()
 	ConnectionAlias() string
@@ -51,6 +51,7 @@ type DistributedInterface interface {
 type actorAssociation struct {
 	actorRef ActorRefInterface
 	actor    actorInterface
+	options  OptionsInterface
 }
 
 type actorSystem struct {
@@ -78,9 +79,9 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	actorRef := newActorRef(name)
 
 	system.actors[name] =
-		actorAssociation{actorRef, actor}
+		actorAssociation{actorRef, actor, options}
 
-	go receive(actor)
+	go receive(actor, options)
 
 	return nil
 }
@@ -115,4 +116,9 @@ func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {
 	}
 
 	return actorAssociation.actorRef, err
+}
+
+func (system *actorSystem) DistributedConfiguration(connectionAlias string) DistributedInterface {
+	v, _ := distributedActorConfiguration[connectionAlias]
+	return v
 }
