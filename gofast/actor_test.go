@@ -15,7 +15,7 @@ type ChildActor struct {
 }
 
 func init() {
-	InitRemoteActorSystem("http://192.168.99.100:2379")
+	InitRemoteActorSystem("http://etcd:2379")
 }
 
 func TestBasic(t *testing.T) {
