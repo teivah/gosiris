@@ -34,6 +34,7 @@ type actorInterface interface {
 
 func (actor *Actor) Close() {
 	close(actor.mailbox)
+	ActorSystem().unregisterActor(actor.name)
 }
 
 func (actor *Actor) Stringer() string {

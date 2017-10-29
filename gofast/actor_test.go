@@ -17,15 +17,20 @@ type ChildActor struct {
 func TestBasic(t *testing.T) {
 	//Create a simple parent actor
 	parentActor := Actor{}
+	defer parentActor.Close()
+
 	//Register the parent actor
 	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	//Create a simple child actor
 	childActor := Actor{}
+	defer childActor.Close()
+
 	//Register the reactions to event types (here a reaction to message)
 	childActor.React("message", func(message Message) {
-		message.Self.Printf("Received %v\n", message.Data)
+		message.Self.LogInfo("Received %v\n", message.Data)
 	})
+
 	//Register the child actor
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
@@ -40,17 +45,19 @@ func TestBasic(t *testing.T) {
 func TestStatefulness(t *testing.T) {
 	childActor := ChildActor{}
 	childActor.hello = make(map[string]bool)
+
 	parentActor := ParentActor{}
+	defer parentActor.Close()
 
 	f := func(message Message) {
-		message.Self.Printf("Receive response %v\n", message.Data)
+		message.Self.LogInfo("Receive response %v\n", message.Data)
 	}
 
 	parentActor.React("helloback", f).React("error", f).React("help", f)
 	ActorSystem().RegisterActor("parent", &parentActor)
 
 	childActor.React("hello", func(message Message) {
-		message.Self.Printf("Receive request %v\n", message.Data)
+		message.Self.LogInfo("Receive request %v\n", message.Data)
 
 		name := message.Data.(string)
 
@@ -77,11 +84,12 @@ func TestStatefulness(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	parentActor := Actor{}
+	defer parentActor.Close()
 	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	childActor := Actor{}
 	childActor.React("message", func(message Message) {
-		message.Self.Printf("Received %v\n", message.Data)
+		message.Self.LogInfo("Received %v\n", message.Data)
 	})
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
@@ -96,24 +104,28 @@ func TestClose(t *testing.T) {
 
 func TestForward(t *testing.T) {
 	parentActor := Actor{}
+	defer parentActor.Close()
 	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	forwarderActor := Actor{}
+	defer forwarderActor.Close()
 	forwarderActor.React("message", func(message Message) {
-		message.Self.Printf("Received %v\n", message.Data)
+		message.Self.LogInfo("Received %v\n", message.Data)
 		forwarderActor.Forward(message, "childActor1", "childActor2")
 	})
 	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor)
 
 	childActor1 := Actor{}
+	defer childActor1.Close()
 	childActor1.React("message", func(message Message) {
-		message.Self.Printf("Received %v from %v\n", message.Data, message.Sender)
+		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1)
 
 	childActor2 := Actor{}
+	defer childActor2.Close()
 	childActor2.React("message", func(message Message) {
-		message.Self.Printf("Received %v from %v\n", message.Data, message.Sender)
+		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
 
@@ -127,26 +139,28 @@ func TestForward(t *testing.T) {
 func TestBecomeUnbecome(t *testing.T) {
 	angry := func(message Message) {
 		if message.Data == "happy" {
-			message.Self.Printf("Unbecome\n")
+			message.Self.LogInfo("Unbecome\n")
 			message.Self.Unbecome(message.messageType)
 		} else {
-			message.Self.Printf("Angrily receiving %v\n", message.Data)
+			message.Self.LogInfo("Angrily receiving %v\n", message.Data)
 		}
 	}
 
 	happy := func(message Message) {
 		if message.Data == "angry" {
-			message.Self.Printf("I need to become angry\n")
+			message.Self.LogInfo("I shall become angry\n")
 			message.Self.Become(message.messageType, angry)
 		} else {
-			message.Self.Printf("Happily receiving %v\n", message.Data)
+			message.Self.LogInfo("Happily receiving %v\n", message.Data)
 		}
 	}
 
 	parentActor := Actor{}
+	defer parentActor.Close()
 	ActorSystem().RegisterActor("parentActor", &parentActor)
 
 	childActor := Actor{}
+	defer childActor.Close()
 	childActor.React("message", happy)
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 

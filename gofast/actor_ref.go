@@ -1,25 +1,49 @@
 package gofast
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"Gofast/gofast/util"
+)
 
 type ActorRef struct {
-	name string
+	name        string
+	infoLogger  *log.Logger
+	errorLogger *log.Logger
 }
 
 type ActorRefInterface interface {
 	Send(string, interface{}, ActorRefInterface) error
 	AskForClose(ActorRefInterface)
-	Printf(string, ...interface{}) (int, error)
+	LogInfo(string, ...interface{})
+	LogError(string, ...interface{})
 	Become(string, func(Message)) error
 	Unbecome(string) error
+	Name() string
 }
 
-func (ref ActorRef) Printf(format string, a ...interface{}) (n int, err error) {
-	return fmt.Printf("["+ref.name+"] "+format, a...)
+func newActorRef(name string) ActorRefInterface {
+	ref := ActorRef{}
+	ref.infoLogger, ref.errorLogger =
+		util.NewActorLogger(name)
+	ref.name = name
+	return ref
+}
+
+func (ref ActorRef) LogInfo(format string, a ...interface{}) {
+	ref.infoLogger.Printf(format, a...)
+}
+
+func (ref ActorRef) LogError(format string, a ...interface{}) {
+	ref.errorLogger.Printf(format, a...)
 }
 
 func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefInterface) error {
-	actor, _ := ActorSystem().actor(ref)
+	actor, err := ActorSystem().actor(ref)
+
+	if err != nil {
+		return err
+	}
 
 	dispatch(actor.Mailbox(), messageType, data, &ref, sender)
 
@@ -27,13 +51,16 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 }
 
 func (ref ActorRef) AskForClose(sender ActorRefInterface) {
+	infoLogger.Printf("Asking to close %v", ref.name)
+
 	actor, err := ActorSystem().actor(ref)
 
 	if err != nil {
+		infoLogger.Printf("Actor %v already closed", ref.name)
 		return
 	}
 
-	dispatch(actor.Mailbox(), poisonPill.messageType, poisonPill.Data, &ref, sender)
+	dispatch(actor.Mailbox(), poisonPill, nil, &ref, sender)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {
@@ -78,4 +105,8 @@ func (ref ActorRef) Unbecome(messageType string) error {
 	delete(actor.Unbecome(), messageType)
 
 	return nil
+}
+
+func (ref ActorRef) Name() string {
+	return ref.name
 }
