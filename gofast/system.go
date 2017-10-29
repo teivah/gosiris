@@ -6,30 +6,15 @@ import (
 )
 
 var actorSystemInstance actorSystem
-var distributedActorConfiguration map[string]DistributedInterface
 var remoteConfiguration actorRemoteConfigurationInterface
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
 	actorSystemInstance.actors = make(map[string]actorAssociation)
-	distributedActorConfiguration = make(map[string]DistributedInterface)
 }
 
 func InitDistributedActorSystem(url ...string) error {
 	InitLocalActorSystem()
-
-	//for _, v := range remote {
-	//	alias := v.ConnectionAlias()
-	//	_, exists := distributedActorConfiguration[alias]
-	//	if !exists {
-	//		err := v.Connection()
-	//		if err != nil {
-	//			util.LogFatal("Failed to create the distributed actor system: %v", err)
-	//			return err
-	//		}
-	//		distributedActorConfiguration[v.ConnectionAlias()] = v
-	//	}
-	//}
 
 	//TODO Manage the implementation dynamically
 	remoteConfiguration = &etcdClient{}
@@ -43,22 +28,13 @@ func InitDistributedActorSystem(url ...string) error {
 		util.LogFatal("Failed to parse the configuration: %v", err)
 	}
 
-	fmt.Println(conf)
+	InitRemoteConnections(conf)
 
 	return nil
 }
 
 func ActorSystem() *actorSystem {
 	return &actorSystemInstance
-}
-
-type DistributedInterface interface {
-	Configure(string, string)
-	Connection() error
-	Send(string, []byte)
-	Receive(string)
-	Close()
-	ConnectionAlias() string
 }
 
 type actorAssociation struct {
@@ -96,6 +72,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 		actor.setMailbox(make(chan Message))
 	} else {
 		remoteConfiguration.RegisterActor(name, options)
+		AddRemoteConnection(name, options)
 	}
 
 	actorRef := newActorRef(name)
@@ -113,6 +90,11 @@ func (system *actorSystem) unregisterActor(name string) {
 	if err != nil {
 		util.LogError("Actor %v not registered", name)
 		return
+	}
+
+	v, err := system.actor(name)
+	if v.options.Remote() {
+		DeleteConnection(name)
 	}
 
 	delete(system.actors, name)
@@ -138,11 +120,6 @@ func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {
 	}
 
 	return actorAssociation.actorRef, err
-}
-
-func (system *actorSystem) DistributedConfiguration(connectionAlias string) DistributedInterface {
-	v, _ := distributedActorConfiguration[connectionAlias]
-	return v
 }
 
 func (system *actorSystem) Invoke(message Message) error {

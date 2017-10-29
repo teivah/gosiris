@@ -5,8 +5,8 @@ import (
 )
 
 func TestPublish(t *testing.T) {
-	r := DistributedAmqp{}
-	r.Configure("amqp", "amqp://guest:guest@amqp:5672/")
+	r := AmqpConnection{}
+	r.Configure("amqp://guest:guest@amqp:5672/")
 
 	r.Send("test", nil)
 

@@ -6,40 +6,38 @@ import (
 	"encoding/json"
 )
 
-type DistributedAmqp struct {
-	connectionAlias string
-	url             string
-	connection      *amqp.Connection
-	channel         *amqp.Channel
+type AmqpConnection struct {
+	url        string
+	connection *amqp.Connection
+	channel    *amqp.Channel
 }
 
-func (remoteAmqp *DistributedAmqp) Configure(connectionAlias string, url string) {
-	remoteAmqp.connectionAlias = connectionAlias
-	remoteAmqp.url = url
+func (amqpConnection *AmqpConnection) Configure(url string) {
+	amqpConnection.url = url
 }
 
-func (remoteAmqp *DistributedAmqp) Connection() error {
-	c, err := amqp.Dial(remoteAmqp.url)
+func (amqpConnection *AmqpConnection) Connection() error {
+	c, err := amqp.Dial(amqpConnection.url)
 	if err != nil {
-		util.LogError("Failed to connect to the AMQP server %v", remoteAmqp.url)
+		util.LogError("Failed to connect to the AMQP server %v", amqpConnection.url)
 		return err
 	}
-	remoteAmqp.connection = c
+	amqpConnection.connection = c
 
 	ch, err := c.Channel()
 	if err != nil {
-		util.LogError("Failed to open an AMQP channel on the server %v", remoteAmqp.url)
+		util.LogError("Failed to open an AMQP channel on the server %v", amqpConnection.url)
 		return err
 	}
-	remoteAmqp.channel = ch
+	amqpConnection.channel = ch
 
-	util.LogInfo("Connected to %v", remoteAmqp.url)
+	util.LogInfo("Connected to %v", amqpConnection.url)
 
 	return nil
 }
 
-func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
-	q, err := remoteAmqp.channel.QueueDeclare(
+func (amqpConnection *AmqpConnection) Receive(queueName string) {
+	q, err := amqpConnection.channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
 		false,     // delete when unused
@@ -52,7 +50,7 @@ func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 		util.LogError("Error while declaring queue %v: %v", queueName, err)
 	}
 
-	msgs, err := remoteAmqp.channel.Consume(
+	msgs, err := amqpConnection.channel.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack
@@ -69,16 +67,16 @@ func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 	}
 }
 
-func (remoteAmqp *DistributedAmqp) Close() {
-	remoteAmqp.channel.Close()
-	remoteAmqp.connection.Close()
+func (amqpConnection *AmqpConnection) Close() {
+	amqpConnection.channel.Close()
+	amqpConnection.connection.Close()
 }
 
-func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
+func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 	json := string(data)
 	util.LogInfo("Sending %v", json)
 
-	q, err := remoteAmqp.channel.QueueDeclare(
+	q, err := amqpConnection.channel.QueueDeclare(
 		destination, // name
 		false,       // durable
 		false,       // delete when unused
@@ -91,7 +89,7 @@ func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
 	}
 
 	body := data
-	err = remoteAmqp.channel.Publish(
+	err = amqpConnection.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
@@ -104,8 +102,4 @@ func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
 	if err != nil {
 		util.LogError("Error while publishing a message to queue %v: %v", destination, err)
 	}
-}
-
-func (remoteAmqp *DistributedAmqp) ConnectionAlias() string {
-	return remoteAmqp.connectionAlias
 }

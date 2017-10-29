@@ -52,7 +52,9 @@ func (remoteActor *RemoteActor) configure(connectionAlias string, endpoint strin
 }
 
 func (actor *Actor) Close() {
-	close(actor.mailbox)
+	if actor.Mailbox() != nil { //If local
+		close(actor.mailbox)
+	}
 	ActorSystem().unregisterActor(actor.name)
 }
 

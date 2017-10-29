@@ -17,7 +17,7 @@ const (
 
 type etcdClient struct {
 	api           client.KeysAPI
-	configuration map[string]actorRemoteConfiguration
+	configuration map[string]OptionsInterface
 }
 
 func (etcdClient *etcdClient) Configure(url ...string) error {
@@ -34,24 +34,26 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 	}
 	etcdClient.api = client.NewKeysAPI(c)
 
+	etcdClient.configuration = make(map[string]OptionsInterface)
+
 	return nil
 }
 
-func (etcdClient *etcdClient) ParseConfiguration() (map[string]actorRemoteConfiguration, error) {
+func (etcdClient *etcdClient) ParseConfiguration() (map[string]OptionsInterface, error) {
 	resp, err := etcdClient.Get(actors_configuration)
 
 	if err != nil {
 		return nil, nil
 	}
 
-	conf := make(map[string]actorRemoteConfiguration)
+	conf := make(map[string]OptionsInterface)
 
 	nodes := resp.Node.Nodes
 	for i := 0; i < nodes.Len(); i++ {
 		v := nodes[i].Value
 		a :=
 			strings.Split(v, delimiter)
-		conf[nodes[i].Key] = actorRemoteConfiguration{a[0], a[1], a[2]}
+		conf[nodes[i].Key] = &ActorOptions{true, a[0], a[1], a[2]}
 	}
 
 	return conf, nil
@@ -68,7 +70,7 @@ func (etcdClient *etcdClient) RegisterActor(name string, options OptionsInterfac
 	}
 
 	//TODO Implement a watcher
-	etcdClient.configuration[k] = actorRemoteConfiguration{options.RemoteType(), options.Url(), options.Destination()}
+	etcdClient.configuration[k] = &ActorOptions{true, options.RemoteType(), options.Url(), options.Destination()}
 	return nil
 }
 
@@ -76,7 +78,7 @@ func (etcdClient *etcdClient) UnregisterActor(name string) error {
 	return etcdClient.Delete(actors_configuration + name)
 }
 
-func (etcdClient *etcdClient) Configuration() (map[string]actorRemoteConfiguration) {
+func (etcdClient *etcdClient) Configuration() (map[string]OptionsInterface) {
 	return etcdClient.configuration
 }
 
