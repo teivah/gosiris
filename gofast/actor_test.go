@@ -39,8 +39,8 @@ func TestBasic(t *testing.T) {
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
 	//Retrieve the parent and child actor reference
-	parentActorRef, _ := ActorSystem().Actor("parentActor")
-	childActorRef, _ := ActorSystem().Actor("childActor")
+	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := ActorSystem().ActorOf("childActor")
 
 	//Send a message from the parent to the child actor
 	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
@@ -76,8 +76,8 @@ func TestStatefulness(t *testing.T) {
 	})
 	ActorSystem().SpawnActor(&parentActor, "child", &childActor)
 
-	childActorRef, _ := ActorSystem().Actor("child")
-	parentActorRef, _ := ActorSystem().Actor("parent")
+	childActorRef, _ := ActorSystem().ActorOf("child")
+	parentActorRef, _ := ActorSystem().ActorOf("parent")
 
 	childActorRef.Send("hello", "teivah", parentActorRef)
 	childActorRef.Send("hello", "teivah", parentActorRef)
@@ -97,8 +97,8 @@ func TestClose(t *testing.T) {
 	})
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
-	parentActorRef, _ := ActorSystem().Actor("parentActor")
-	childActorRef, _ := ActorSystem().Actor("childActor")
+	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := ActorSystem().ActorOf("childActor")
 
 	childActorRef.AskForClose(parentActorRef)
 
@@ -133,8 +133,8 @@ func TestForward(t *testing.T) {
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
 
-	parentActorRef, _ := ActorSystem().Actor("parentActor")
-	forwarderActorRef, _ := ActorSystem().Actor("forwarderActor")
+	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+	forwarderActorRef, _ := ActorSystem().ActorOf("forwarderActor")
 
 	forwarderActorRef.Send("message", "to be forwarded", parentActorRef)
 	time.Sleep(500 * time.Millisecond)
@@ -168,12 +168,17 @@ func TestBecomeUnbecome(t *testing.T) {
 	childActor.React("message", happy)
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
 
-	parentActorRef, _ := ActorSystem().Actor("parentActor")
-	childActorRef, _ := ActorSystem().Actor("childActor")
+	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := ActorSystem().ActorOf("childActor")
 
 	childActorRef.Send("message", "hello!", parentActorRef)
 	childActorRef.Send("message", "angry", parentActorRef)
 	childActorRef.Send("message", "hello!", parentActorRef)
 	childActorRef.Send("message", "happy", parentActorRef)
 	childActorRef.Send("message", "hello!", parentActorRef)
+}
+
+func TestNewRemoteActor(t *testing.T) {
+	//parentActor := RemoteActor{}
+
 }

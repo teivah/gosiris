@@ -10,14 +10,11 @@ var actorSystemInstance actorSystem
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
-	actorSystemInstance.actorNames = make(map[string]ActorRefInterface)
-	actorSystemInstance.actors = make(map[ActorRefInterface]actorInterface)
+	actorSystemInstance.actors = make(map[string]actorAssociation)
 }
 
 func InitRemoteActorSystem(endpoints ...string) {
-	actorSystemInstance = actorSystem{}
-	actorSystemInstance.actorNames = make(map[string]ActorRefInterface)
-	actorSystemInstance.actors = make(map[ActorRefInterface]actorInterface)
+	InitLocalActorSystem()
 
 	etcd.InitConfiguration(endpoints...)
 }
@@ -26,9 +23,13 @@ func ActorSystem() *actorSystem {
 	return &actorSystemInstance
 }
 
+type actorAssociation struct {
+	actorRef ActorRefInterface
+	actor    actorInterface
+}
+
 type actorSystem struct {
-	actorNames map[string]ActorRefInterface
-	actors     map[ActorRefInterface]actorInterface
+	actors map[string]actorAssociation
 }
 
 func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
@@ -39,7 +40,7 @@ func (system *actorSystem) RegisterActor(name string, actor actorInterface) erro
 func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor actorInterface) error {
 	util.LogInfo("Spawning new actor %v", name)
 
-	_, exists := system.actorNames[name]
+	_, exists := system.actors[name]
 	if exists {
 		util.LogInfo("actor %v already registered", name)
 		return fmt.Errorf("actor %v already registered", name)
@@ -50,8 +51,9 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	actor.setMailbox(make(chan Message))
 
 	actorRef := newActorRef(name)
-	system.actorNames[name] = actorRef
-	system.actors[actorRef] = actor
+
+	system.actors[name] =
+		actorAssociation{actorRef, actor}
 
 	go receive(actor)
 
@@ -59,38 +61,33 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 }
 
 func (system *actorSystem) unregisterActor(name string) {
-	actorRef, exists := system.actorNames[name]
-	if !exists {
+	_, err := system.ActorOf(name)
+	if err != nil {
+		util.LogError("Actor %v not registered", name)
 		return
 	}
 
-	delete(system.actorNames, name)
-	delete(system.actors, actorRef)
+	delete(system.actors, name)
 
 	util.LogInfo("%v unregistered from the actor system", name)
 }
 
-func (system *actorSystem) Actor(name string) (ActorRefInterface, error) {
-	ref, exists := system.actorNames[name]
+func (system *actorSystem) actor(name string) (actorAssociation, error) {
+	ref, exists := system.actors[name]
 	if !exists {
 		util.LogError("actor %v not registered", name)
-		return nil, fmt.Errorf("actor %v not registered", name)
+		return actorAssociation{}, fmt.Errorf("actor %v not registered", name)
 	}
 
 	return ref, nil
 }
 
-func (system *actorSystem) actor(actorRef ActorRefInterface) (actorInterface, error) {
-	ref, exists := system.actors[actorRef]
+func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {
+	actorAssociation, err := system.actor(name)
 
-	if !exists {
-		util.LogError("actor %v not registered", actorRef.Name())
-		return nil, fmt.Errorf("actor %v not registered", actorRef.Name())
+	if err != nil {
+		return nil, err
 	}
 
-	return ref, nil
-}
-
-func (system *actorSystem) printConfiguration() {
-	util.LogInfo("%v, %v", system.actors, system.actorNames)
+	return actorAssociation.actorRef, err
 }

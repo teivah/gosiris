@@ -6,6 +6,10 @@ import (
 
 var root = &Actor{}
 
+const (
+	remote_amqp = "remote_amqp"
+)
+
 func RootActor() *Actor {
 	return root
 }
@@ -16,6 +20,12 @@ type Actor struct {
 	mailbox  chan Message
 	parent   actorInterface
 	unbecome map[string]func(Message)
+}
+
+type RemoteActor struct {
+	Actor
+	connectionAlias string
+	endpoint        string
 }
 
 type actorInterface interface {
@@ -30,6 +40,15 @@ type actorInterface interface {
 	Name() string
 	Close()
 	Forward(Message, ...string)
+}
+
+type remoteActorInterface interface {
+	configure(string, string)
+}
+
+func (remoteActor *RemoteActor) configure(connectionAlias string, endpoint string) {
+	remoteActor.connectionAlias = connectionAlias
+	remoteActor.endpoint = endpoint
 }
 
 func (actor *Actor) Close() {
@@ -77,7 +96,7 @@ func (actor *Actor) setParent(parent actorInterface) {
 }
 
 func (actor *Actor) Parent() ActorRefInterface {
-	parent, _ := ActorSystem().Actor(actor.parent.Name())
+	parent, _ := ActorSystem().ActorOf(actor.parent.Name())
 	return parent
 }
 
@@ -87,7 +106,7 @@ func (actor *Actor) Name() string {
 
 func (actor *Actor) Forward(message Message, destinations ...string) {
 	for _, v := range destinations {
-		actorRef, err := ActorSystem().Actor(v)
+		actorRef, err := ActorSystem().ActorOf(v)
 		if err != nil {
 			fmt.Errorf("actor %v is not part of the actor system", v)
 		}

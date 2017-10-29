@@ -2,6 +2,7 @@ package gofast
 
 import (
 	"flogo-lib/logger"
+	"Gofast/gofast/util"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func receive(actor actorInterface) {
 		select {
 		case p := <-c:
 			if p.messageType == poisonPill {
-				logger.Info("Actor %v has received a poison pill", actor.Name())
+				util.LogInfo("Actor %v has received a poison pill", actor.Name())
 				actor.Close()
 				return
 			}
