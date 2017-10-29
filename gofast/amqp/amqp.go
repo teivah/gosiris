@@ -6,19 +6,19 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type RemoteAmqp struct {
+type DistributedAmqp struct {
 	connectionAlias string
 	url             string
 	connection      *amqp.Connection
 	channel         *amqp.Channel
 }
 
-func (remoteAmqp *RemoteAmqp) Configure(connectionAlias string, url string) {
+func (remoteAmqp *DistributedAmqp) Configure(connectionAlias string, url string) {
 	remoteAmqp.connectionAlias = connectionAlias
 	remoteAmqp.url = url
 }
 
-func (remoteAmqp *RemoteAmqp) Connection() error {
+func (remoteAmqp *DistributedAmqp) Connection() error {
 	c, err := amqp.Dial(remoteAmqp.url)
 	if err != nil {
 		util.LogError("Failed to connect to the AMQP server %v", remoteAmqp.url)
@@ -38,7 +38,7 @@ func (remoteAmqp *RemoteAmqp) Connection() error {
 	return nil
 }
 
-func (remoteAmqp *RemoteAmqp) Receive(queueName string) {
+func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 	q, err := remoteAmqp.channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
@@ -68,12 +68,12 @@ func (remoteAmqp *RemoteAmqp) Receive(queueName string) {
 	}()
 }
 
-func (remoteAmqp *RemoteAmqp) Close() {
+func (remoteAmqp *DistributedAmqp) Close() {
 	remoteAmqp.channel.Close()
 	remoteAmqp.connection.Close()
 }
 
-func (remoteAmqp *RemoteAmqp) Send(destination string) {
+func (remoteAmqp *DistributedAmqp) Send(destination string) {
 	q, err := remoteAmqp.channel.QueueDeclare(
 		destination, // name
 		false,       // durable
@@ -102,6 +102,6 @@ func (remoteAmqp *RemoteAmqp) Send(destination string) {
 	}
 }
 
-func (remoteAmqp *RemoteAmqp) ConnectionAlias() string {
+func (remoteAmqp *DistributedAmqp) ConnectionAlias() string {
 	return remoteAmqp.connectionAlias
 }

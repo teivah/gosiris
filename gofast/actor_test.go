@@ -16,7 +16,7 @@ type ChildActor struct {
 }
 
 func init() {
-	r := amqp.RemoteAmqp{}
+	r := amqp.DistributedAmqp{}
 	r.Configure("amqp", "amqp://guest:guest@amqp:5672/")
 	InitDistributedActorSystem(&r)
 }

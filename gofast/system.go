@@ -6,26 +6,27 @@ import (
 )
 
 var actorSystemInstance actorSystem
-var remoteConfiguration map[string]RemoteInterface
+var distributedActorConfiguration map[string]DistributedInterface
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
 	actorSystemInstance.actors = make(map[string]actorAssociation)
-	remoteConfiguration = make(map[string]RemoteInterface)
+	distributedActorConfiguration = make(map[string]DistributedInterface)
 }
 
-func InitDistributedActorSystem(remote ... RemoteInterface) error {
+func InitDistributedActorSystem(remote ... DistributedInterface) error {
 	InitLocalActorSystem()
 
 	for _, v := range remote {
 		alias := v.ConnectionAlias()
-		_, exists := remoteConfiguration[alias]
+		_, exists := distributedActorConfiguration[alias]
 		if !exists {
 			err := v.Connection()
 			if err != nil {
 				util.LogFatal("Failed to create the distributed actor system: %v", err)
 				return err
 			}
+
 		}
 	}
 
@@ -38,7 +39,7 @@ func ActorSystem() *actorSystem {
 	return &actorSystemInstance
 }
 
-type RemoteInterface interface {
+type DistributedInterface interface {
 	Configure(string, string)
 	Connection() error
 	Send(string)
