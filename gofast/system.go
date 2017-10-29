@@ -3,7 +3,7 @@ package gofast
 import (
 	"fmt"
 	"Gofast/gofast/util"
-	"Gofast/gofast/integration"
+	"Gofast/gofast/etcd"
 )
 
 var actorSystemInstance actorSystem
@@ -19,7 +19,7 @@ func InitRemoteActorSystem(endpoints ...string) {
 	actorSystemInstance.actorNames = make(map[string]ActorRefInterface)
 	actorSystemInstance.actors = make(map[ActorRefInterface]actorInterface)
 
-	integration.InitConfiguration(endpoints...)
+	etcd.InitConfiguration(endpoints...)
 }
 
 func ActorSystem() *actorSystem {
