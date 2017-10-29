@@ -1,9 +1,9 @@
-package amqp
+package gofast
 
 import (
-	"fmt"
 	"Gofast/gofast/util"
 	"github.com/streadway/amqp"
+	"encoding/json"
 )
 
 type DistributedAmqp struct {
@@ -62,7 +62,10 @@ func (remoteAmqp *DistributedAmqp) Receive(queueName string) {
 		nil,    // args
 	)
 	for d := range msgs {
-		fmt.Printf("Received a message: %s", d.Body)
+		msg := Message{}
+		json.Unmarshal(d.Body, &msg)
+
+		ActorSystem().Invoke(msg)
 	}
 }
 
@@ -72,6 +75,9 @@ func (remoteAmqp *DistributedAmqp) Close() {
 }
 
 func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
+	json := string(data)
+	util.LogInfo("Sending %v", json)
+
 	q, err := remoteAmqp.channel.QueueDeclare(
 		destination, // name
 		false,       // durable
@@ -84,8 +90,7 @@ func (remoteAmqp *DistributedAmqp) Send(destination string, data []byte) {
 		util.LogError("Error while declaring queue %v: %v", destination, err)
 	}
 
-	body :=
-		string(data)
+	body := data
 	err = remoteAmqp.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key
