@@ -31,7 +31,7 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 		}
 	}
 
-	fmt.Println(manager)
+	util.LogInfo("Manager: %v", manager)
 }
 
 func AddRemoteConnection(name string, conf OptionsInterface) {
