@@ -72,9 +72,16 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 		return fmt.Errorf("actor %v already registered", name)
 	}
 
+	if options == nil {
+		options = &ActorOptions{}
+		options.SetRemote(false)
+	}
+
 	actor.setName(name)
 	actor.setParent(parent)
-	actor.setMailbox(make(chan Message))
+	if !options.Remote() {
+		actor.setMailbox(make(chan Message))
+	}
 
 	actorRef := newActorRef(name)
 

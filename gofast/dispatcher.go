@@ -73,7 +73,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 
 	m := Message{messageType, data, sender, receiver}
 
-	if options == nil {
+	if !options.Remote() {
 		channel <- m
 		util.LogInfo("Message dispatched to local channel")
 	} else {
@@ -96,7 +96,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 }
 
 func receive(actor actorInterface, options OptionsInterface) {
-	if options == nil {
+	if !options.Remote() {
 		defer func() {
 			if r := recover(); r != nil {
 				util.LogInfo("Recovered in %v", r)
