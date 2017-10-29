@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 	defer parentActor.Close()
 
 	//Register the parent actor
-	ActorSystem().RegisterActor("parentActor", &parentActor)
+	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 
 	//Create a simple child actor
 	childActor := Actor{}
@@ -36,7 +36,7 @@ func TestBasic(t *testing.T) {
 	})
 
 	//Register the child actor
-	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
 	//Retrieve the parent and child actor reference
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
@@ -58,7 +58,7 @@ func TestStatefulness(t *testing.T) {
 	}
 
 	parentActor.React("helloback", f).React("error", f).React("help", f)
-	ActorSystem().RegisterActor("parent", &parentActor)
+	ActorSystem().RegisterActor("parent", &parentActor, nil)
 
 	childActor.React("hello", func(message Message) {
 		message.Self.LogInfo("Receive request %v\n", message.Data)
@@ -74,7 +74,7 @@ func TestStatefulness(t *testing.T) {
 			message.Sender.Send("helloback", "hello "+name+"!", message.Self)
 		}
 	})
-	ActorSystem().SpawnActor(&parentActor, "child", &childActor)
+	ActorSystem().SpawnActor(&parentActor, "child", &childActor, nil)
 
 	childActorRef, _ := ActorSystem().ActorOf("child")
 	parentActorRef, _ := ActorSystem().ActorOf("parent")
@@ -89,13 +89,13 @@ func TestStatefulness(t *testing.T) {
 func TestClose(t *testing.T) {
 	parentActor := Actor{}
 	defer parentActor.Close()
-	ActorSystem().RegisterActor("parentActor", &parentActor)
+	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 
 	childActor := Actor{}
 	childActor.React("message", func(message Message) {
 		message.Self.LogInfo("Received %v\n", message.Data)
 	})
-	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	childActorRef, _ := ActorSystem().ActorOf("childActor")
@@ -109,7 +109,7 @@ func TestClose(t *testing.T) {
 func TestForward(t *testing.T) {
 	parentActor := Actor{}
 	defer parentActor.Close()
-	ActorSystem().RegisterActor("parentActor", &parentActor)
+	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 
 	forwarderActor := Actor{}
 	defer forwarderActor.Close()
@@ -117,21 +117,21 @@ func TestForward(t *testing.T) {
 		message.Self.LogInfo("Received %v\n", message.Data)
 		forwarderActor.Forward(message, "childActor1", "childActor2")
 	})
-	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor)
+	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor, nil)
 
 	childActor1 := Actor{}
 	defer childActor1.Close()
 	childActor1.React("message", func(message Message) {
 		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 	})
-	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1)
+	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1, nil)
 
 	childActor2 := Actor{}
 	defer childActor2.Close()
 	childActor2.React("message", func(message Message) {
 		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 	})
-	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2)
+	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2, nil)
 
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	forwarderActorRef, _ := ActorSystem().ActorOf("forwarderActor")
@@ -161,12 +161,12 @@ func TestBecomeUnbecome(t *testing.T) {
 
 	parentActor := Actor{}
 	defer parentActor.Close()
-	ActorSystem().RegisterActor("parentActor", &parentActor)
+	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 
 	childActor := Actor{}
 	defer childActor.Close()
 	childActor.React("message", happy)
-	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor)
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	childActorRef, _ := ActorSystem().ActorOf("childActor")

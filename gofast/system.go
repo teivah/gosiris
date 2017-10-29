@@ -32,12 +32,12 @@ type actorSystem struct {
 	actors map[string]actorAssociation
 }
 
-func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
+func (system *actorSystem) RegisterActor(name string, actor actorInterface, options OptionsInterface) error {
 	util.LogInfo("Registering new actor %v", name)
-	return system.SpawnActor(RootActor(), name, actor)
+	return system.SpawnActor(RootActor(), name, actor, options)
 }
 
-func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor actorInterface) error {
+func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor actorInterface, options OptionsInterface) error {
 	util.LogInfo("Spawning new actor %v", name)
 
 	_, exists := system.actors[name]
