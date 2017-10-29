@@ -32,16 +32,16 @@ type actorSystem struct {
 }
 
 func (system *actorSystem) RegisterActor(name string, actor actorInterface) error {
-	util.InfoLogger.Printf("Registering new actor %v", name)
+	util.LogInfo("Registering new actor %v", name)
 	return system.SpawnActor(RootActor(), name, actor)
 }
 
 func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor actorInterface) error {
-	util.InfoLogger.Printf("Spawning new actor %v", name)
+	util.LogInfo("Spawning new actor %v", name)
 
 	_, exists := system.actorNames[name]
 	if exists {
-		util.ErrorLogger.Printf("actor %v already registered", name)
+		util.LogInfo("actor %v already registered", name)
 		return fmt.Errorf("actor %v already registered", name)
 	}
 
@@ -67,13 +67,13 @@ func (system *actorSystem) unregisterActor(name string) {
 	delete(system.actorNames, name)
 	delete(system.actors, actorRef)
 
-	util.InfoLogger.Printf("%v unregistered from the actor system", name)
+	util.LogInfo("%v unregistered from the actor system", name)
 }
 
 func (system *actorSystem) Actor(name string) (ActorRefInterface, error) {
 	ref, exists := system.actorNames[name]
 	if !exists {
-		util.ErrorLogger.Printf("actor %v not registered", name)
+		util.LogError("actor %v not registered", name)
 		return nil, fmt.Errorf("actor %v not registered", name)
 	}
 
@@ -84,7 +84,7 @@ func (system *actorSystem) actor(actorRef ActorRefInterface) (actorInterface, er
 	ref, exists := system.actors[actorRef]
 
 	if !exists {
-		util.ErrorLogger.Printf("actor %v not registered", actorRef.Name())
+		util.LogError("actor %v not registered", actorRef.Name())
 		return nil, fmt.Errorf("actor %v not registered", actorRef.Name())
 	}
 
@@ -92,5 +92,5 @@ func (system *actorSystem) actor(actorRef ActorRefInterface) (actorInterface, er
 }
 
 func (system *actorSystem) printConfiguration() {
-	util.InfoLogger.Printf("%v, %v", system.actors, system.actorNames)
+	util.LogInfo("%v, %v", system.actors, system.actorNames)
 }

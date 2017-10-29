@@ -1,6 +1,8 @@
 package gofast
 
-import "Gofast/gofast/util"
+import (
+	"flogo-lib/logger"
+)
 
 func init() {
 
@@ -18,7 +20,7 @@ var poisonPill = "poisonpill"
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface) {
 	defer func() {
 		if r := recover(); r != nil {
-			util.InfoLogger.Printf("Recovered in %v", r)
+			logger.Info("Recovered in %v", r)
 		}
 	}()
 
@@ -30,7 +32,7 @@ func receive(actor actorInterface) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			util.InfoLogger.Printf("Recovered in %v", r)
+			logger.Info("Recovered in %v", r)
 		}
 	}()
 
@@ -38,7 +40,7 @@ func receive(actor actorInterface) {
 		select {
 		case p := <-c:
 			if p.messageType == poisonPill {
-				util.InfoLogger.Printf("Actor %v has received a poison pill", actor.Name())
+				logger.Info("Actor %v has received a poison pill", actor.Name())
 				actor.Close()
 				return
 			}

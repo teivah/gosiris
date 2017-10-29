@@ -18,7 +18,7 @@ func InitConfiguration(endpoints ...string) error {
 
 	c, err := client.New(cfg)
 	if err != nil {
-		util.ErrorLogger.Printf("etcd connection error %v", err)
+		util.LogError("etcd connection error %v", err)
 		return err
 	}
 	api = client.NewKeysAPI(c)
@@ -30,7 +30,7 @@ func Set(key string, value string) error {
 	_, err := api.Set(context.Background(), key, value, nil)
 
 	if err != nil {
-		util.ErrorLogger.Printf("etcd set %v error %v", key, err)
+		util.LogError("etcd set %v error %v", key, err)
 	}
 
 	return err
@@ -40,7 +40,7 @@ func Get(key string) (string, error) {
 	resp, err := api.Get(context.Background(), key, nil)
 
 	if err != nil {
-		util.ErrorLogger.Printf("etcd get %v error %v", key, err)
+		util.LogError("etcd get %v error %v", key, err)
 		return "", err
 	}
 
