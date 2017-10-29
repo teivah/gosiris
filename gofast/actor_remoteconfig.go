@@ -1,7 +1,5 @@
 package gofast
 
-var conf map[string]actorRemoteConfiguration
-
 type actorRemoteConfiguration struct {
 	remoteType  string
 	url         string
@@ -10,9 +8,8 @@ type actorRemoteConfiguration struct {
 
 type actorRemoteConfigurationInterface interface {
 	Configure(...string) error
+	RegisterActor(string, OptionsInterface) error
+	UnregisterActor(string) error
 	ParseConfiguration() (map[string]actorRemoteConfiguration, error)
-}
-
-func ActorRemoteConfiguration() map[string]actorRemoteConfiguration {
-	return conf
+	Configuration() map[string]actorRemoteConfiguration
 }

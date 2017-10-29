@@ -6,6 +6,7 @@ import (
 	"Gofast/gofast/util"
 	"context"
 	"strings"
+	"fmt"
 )
 
 const (
@@ -15,7 +16,8 @@ const (
 )
 
 type etcdClient struct {
-	api client.KeysAPI
+	api           client.KeysAPI
+	configuration map[string]actorRemoteConfiguration
 }
 
 func (etcdClient *etcdClient) Configure(url ...string) error {
@@ -55,6 +57,29 @@ func (etcdClient *etcdClient) ParseConfiguration() (map[string]actorRemoteConfig
 	return conf, nil
 }
 
+func (etcdClient *etcdClient) RegisterActor(name string, options OptionsInterface) error {
+	k := actors_configuration + name
+	v := options.RemoteType() + delimiter + options.Url() + delimiter + options.Destination()
+
+	err := etcdClient.Set(k, v)
+	if err != nil {
+		fmt.Errorf("Failed to register actor %v: %v", k, err)
+		return err
+	}
+
+	//TODO Implement a watcher
+	etcdClient.configuration[k] = actorRemoteConfiguration{options.RemoteType(), options.Url(), options.Destination()}
+	return nil
+}
+
+func (etcdClient *etcdClient) UnregisterActor(name string) error {
+	return etcdClient.Delete(actors_configuration + name)
+}
+
+func (etcdClient *etcdClient) Configuration() (map[string]actorRemoteConfiguration) {
+	return etcdClient.configuration
+}
+
 func (etcdClient *etcdClient) Set(key string, value string) error {
 	_, err := etcdClient.api.Set(context.Background(), key, value, nil)
 
@@ -62,6 +87,11 @@ func (etcdClient *etcdClient) Set(key string, value string) error {
 		util.LogError("etcd set %v error %v", key, err)
 	}
 
+	return err
+}
+
+func (etcdClient *etcdClient) Delete(key string) error {
+	_, err := etcdClient.api.Delete(context.Background(), key, nil)
 	return err
 }
 

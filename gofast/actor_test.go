@@ -15,9 +15,7 @@ type ChildActor struct {
 }
 
 func init() {
-	r := DistributedAmqp{}
-	r.Configure("amqp", "amqp://guest:guest@amqp:5672/")
-	InitDistributedActorSystem(&r)
+	InitDistributedActorSystem("http://etcd:2379")
 }
 
 func TestBasic(t *testing.T) {
@@ -187,7 +185,7 @@ func TestNewRemoteActor(t *testing.T) {
 		message.Self.LogInfo("Received %v", message.Data)
 	})
 	defer actor1.Close()
-	ActorSystem().RegisterActor("actor1", actor1, new(ActorOptions).SetConnectionAlias("amqp").SetEndpoint("actor1"))
+	ActorSystem().RegisterActor("actor1", actor1, new(ActorOptions).SetRemote(true).SetConnectionAlias("amqp").SetEndpoint("actor1"))
 
 	actor2 := new(Actor).React("message", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)

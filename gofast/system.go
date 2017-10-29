@@ -7,6 +7,7 @@ import (
 
 var actorSystemInstance actorSystem
 var distributedActorConfiguration map[string]DistributedInterface
+var remoteConfiguration actorRemoteConfigurationInterface
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
@@ -14,23 +15,35 @@ func InitLocalActorSystem() {
 	distributedActorConfiguration = make(map[string]DistributedInterface)
 }
 
-func InitDistributedActorSystem(remote ... DistributedInterface) error {
+func InitDistributedActorSystem(url ...string) error {
 	InitLocalActorSystem()
 
-	for _, v := range remote {
-		alias := v.ConnectionAlias()
-		_, exists := distributedActorConfiguration[alias]
-		if !exists {
-			err := v.Connection()
-			if err != nil {
-				util.LogFatal("Failed to create the distributed actor system: %v", err)
-				return err
-			}
-			distributedActorConfiguration[v.ConnectionAlias()] = v
-		}
+	//for _, v := range remote {
+	//	alias := v.ConnectionAlias()
+	//	_, exists := distributedActorConfiguration[alias]
+	//	if !exists {
+	//		err := v.Connection()
+	//		if err != nil {
+	//			util.LogFatal("Failed to create the distributed actor system: %v", err)
+	//			return err
+	//		}
+	//		distributedActorConfiguration[v.ConnectionAlias()] = v
+	//	}
+	//}
+
+	//TODO Manage the implementation dynamically
+	remoteConfiguration = &etcdClient{}
+	err := remoteConfiguration.Configure(url...)
+	if err != nil {
+		util.LogFatal("Failed to configure access to the remote repository: %v", err)
 	}
 
-	//etcd.InitConfiguration(endpoints...)
+	conf, err := remoteConfiguration.ParseConfiguration()
+	if err != nil {
+		util.LogFatal("Failed to parse the configuration: %v", err)
+	}
+
+	fmt.Println(conf)
 
 	return nil
 }
@@ -81,6 +94,8 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	actor.setParent(parent)
 	if !options.Remote() {
 		actor.setMailbox(make(chan Message))
+	} else {
+		remoteConfiguration.RegisterActor(name, options)
 	}
 
 	actorRef := newActorRef(name)
