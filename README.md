@@ -1,6 +1,6 @@
-# Gofast
+# gofast
 
-Gofast is a simple library to bring the actor model on top of Golang.
+gofast is a simple library to bring the actor model on top of Golang.
 
 ## Features
 * Send message from one actor to another using the mailbox principle
@@ -10,7 +10,7 @@ Gofast is a simple library to bring the actor model on top of Golang.
 * Capacity to gracefully ask an actor to stop its execution
 
 ## Hello world
-The Gofast hello world is the following:
+The gofast hello world is the following:
 
 ```go
 //Create a simple parent actor
