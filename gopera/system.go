@@ -6,7 +6,7 @@ import (
 )
 
 var actorSystemInstance actorSystem
-var remoteConfiguration actorRemoteConfigurationInterface
+var registry registryInterface
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
@@ -17,13 +17,13 @@ func InitDistributedActorSystem(url ...string) error {
 	InitLocalActorSystem()
 
 	//TODO Manage the implementation dynamically
-	remoteConfiguration = &etcdClient{}
-	err := remoteConfiguration.Configure(url...)
+	registry = &etcdClient{}
+	err := registry.Configure(url...)
 	if err != nil {
 		util.LogFatal("Failed to configure access to the remote repository: %v", err)
 	}
 
-	conf, err := remoteConfiguration.ParseConfiguration()
+	conf, err := registry.ParseConfiguration()
 	if err != nil {
 		util.LogFatal("Failed to parse the configuration: %v", err)
 	}
@@ -59,7 +59,6 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	_, exists := system.actors[name]
 	if exists {
 		util.LogInfo("Actor %v already registered", name)
-		//return fmt.Errorf("actor %v already registered", name)
 	}
 
 	if options == nil {
@@ -72,8 +71,9 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	if !options.Remote() {
 		actor.setMailbox(make(chan Message))
 	} else {
-		remoteConfiguration.RegisterActor(name, options)
-		AddRemoteConnection(name, options)
+		registry.RegisterActor(name, options)
+		go registry.Watch(system.callback)
+		AddConnection(name, options)
 	}
 
 	actorRef := newActorRef(name)
@@ -84,6 +84,19 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	go receive(actor, options)
 
 	return nil
+}
+
+func (system *actorSystem) callback(name string, options *ActorOptions) {
+	actorRef := newActorRef(name)
+	actor := Actor{}
+	actor.name = name
+
+	system.actors[name] =
+		actorAssociation{actorRef, &actor, options}
+
+	AddConnection(name, options)
+
+	util.LogInfo("Actor %v added to the local system", name)
 }
 
 func (system *actorSystem) unregisterActor(name string) {

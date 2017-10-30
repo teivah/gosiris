@@ -1,16 +1,21 @@
-gopera is a simple library to bring the actor model on top of Golang.
+gopera is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Golang.
 
-# Features
-* Send message from one actor to another using the **mailbox** principle
+# Principles
+gopera is based on three principles: Configure, Discover, React
+* Configure the actor behaviour depending on event types
+* Discover the other actors dynamically registered in a remote registry
+* React on events sent by actors
+
+# Detailed features
+* Send messages from one actor to another using the **mailbox** principle.
+* An actor can be either **local** (triggered through a Go channel) or **remote** (triggered through an **AMQP broker**)
+* **Hierarchy** dependencies between the different actors
 * **Forward** message to maintain the original sender
-* **Hierarchy** concept between the different actors
-* **Become/unbecome** principle to modify at runtime the behavior of an actor
+* **Become/unbecome** capability to modify at runtime the behavior of an actor
 * Capacity to gracefully ask an actor to **stop** its execution
-* **Distributed actor system** across the network using an **AMQP broker**
-* Actors **discoverability** using etcd 
+* Automatic registration and **discoverability** of the actors using a registry (**etcd**)
 
 # Hello world
-The gofast hello world is the following:
 
 ```go
 package main
@@ -52,12 +57,12 @@ func main() {
 ```
 
 ```
-[childActor] Received Hi! How are you?
+INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 ```
 
 # Contributing
 
-* Open an issue if you need a new feature or if you spotted a bug
+* Open an issue if you want a new feature or if you spotted a bug
 * Feel free to propose pull requests
 
 Any contribution is welcome!

@@ -10,14 +10,13 @@ import (
 )
 
 const (
-	actors_configuration = "/proactor/actor/"
+	actors_configuration = "/gopera/actor/"
 	prefix               = "gofast://"
 	delimiter            = "#"
 )
 
 type etcdClient struct {
-	api           client.KeysAPI
-	configuration map[string]OptionsInterface
+	api client.KeysAPI
 }
 
 func (etcdClient *etcdClient) Configure(url ...string) error {
@@ -34,12 +33,12 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 	}
 	etcdClient.api = client.NewKeysAPI(c)
 
-	etcdClient.configuration = make(map[string]OptionsInterface)
+	etcdClient.createDir(actors_configuration)
 
 	return nil
 }
 
-func (etcdClient *etcdClient) Watch() error {
+func (etcdClient *etcdClient) Watch(f func(string, *ActorOptions)) error {
 	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{0, true})
 
 	for {
@@ -52,7 +51,9 @@ func (etcdClient *etcdClient) Watch() error {
 
 		k, v := parseNode(r.Node)
 
-		conf[k] = v
+		util.LogInfo("New actor detected: %v", k)
+
+		f(k, v)
 	}
 	return nil
 }
@@ -94,8 +95,6 @@ func (etcdClient *etcdClient) RegisterActor(name string, options OptionsInterfac
 		return err
 	}
 
-	//TODO Implement a watcher
-	etcdClient.configuration[k] = &ActorOptions{true, options.RemoteType(), options.Url(), options.Destination()}
 	return nil
 }
 
@@ -103,8 +102,11 @@ func (etcdClient *etcdClient) UnregisterActor(name string) error {
 	return etcdClient.Delete(actors_configuration + name)
 }
 
-func (etcdClient *etcdClient) Configuration() (map[string]OptionsInterface) {
-	return etcdClient.configuration
+func (etcdClient *etcdClient) createDir(key string) {
+	opt := new(client.SetOptions)
+	opt.Dir = true
+
+	etcdClient.api.Set(context.Background(), key, "", opt)
 }
 
 func (etcdClient *etcdClient) Set(key string, value string) error {

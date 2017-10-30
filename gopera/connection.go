@@ -34,7 +34,7 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 	util.LogInfo("Manager: %v", manager)
 }
 
-func AddRemoteConnection(name string, conf OptionsInterface) {
+func AddConnection(name string, conf OptionsInterface) {
 	if conf.RemoteType() == "amqp" {
 		c := AmqpConnection{}
 		c.Configure(conf.Url())
@@ -50,8 +50,8 @@ func AddRemoteConnection(name string, conf OptionsInterface) {
 func DeleteConnection(name string) error {
 	v, exists := manager[name]
 	if !exists {
-		util.LogError("Connection %v not registered", name)
-		return fmt.Errorf("connection %v not registered", name)
+		util.LogError("Delete error: connection %v not registered", name)
+		return fmt.Errorf("delete error: connection %v not registered", name)
 	}
 
 	v.Close()
@@ -65,8 +65,8 @@ func DeleteConnection(name string) error {
 func RemoteConnection(name string) (RemoteConnectionInterface, error) {
 	v, exists := manager[name]
 	if !exists {
-		util.LogError("Connection %v not registered", name)
-		return nil, fmt.Errorf("connection %v not registered", name)
+		util.LogError("Remote connection error: connection %v not registered", name)
+		return nil, fmt.Errorf("remote connection error: connection %v not registered", name)
 	}
 
 	return v, nil
