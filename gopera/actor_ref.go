@@ -1,9 +1,9 @@
-package gofast
+package gopera
 
 import (
 	"fmt"
 	"log"
-	"Gofast/gofast/util"
+	"gopera/gopera/util"
 )
 
 type ActorRef struct {

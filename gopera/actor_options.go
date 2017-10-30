@@ -1,4 +1,4 @@
-package gofast
+package gopera
 
 type ActorOptions struct {
 	remote      bool

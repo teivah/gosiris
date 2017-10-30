@@ -1,8 +1,8 @@
-package gofast
+package gopera
 
 import (
 	"fmt"
-	"Gofast/gofast/util"
+	"gopera/gopera/util"
 )
 
 var manager map[string]RemoteConnectionInterface

@@ -1,10 +1,10 @@
-package gofast
+package gopera
 
 import (
 	"time"
 	"math/rand"
 	"testing"
-	"Gofast/gofast/util"
+	"gopera/gopera/util"
 )
 
 var c etcdClient

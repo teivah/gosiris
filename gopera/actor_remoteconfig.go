@@ -1,4 +1,4 @@
-package gofast
+package gopera
 
 type actorRemoteConfigurationInterface interface {
 	Configure(...string) error

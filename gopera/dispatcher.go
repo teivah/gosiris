@@ -1,7 +1,7 @@
-package gofast
+package gopera
 
 import (
-	"Gofast/gofast/util"
+	"gopera/gopera/util"
 	"encoding/json"
 	"fmt"
 )

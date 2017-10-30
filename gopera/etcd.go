@@ -1,9 +1,9 @@
-package gofast
+package gopera
 
 import (
 	"github.com/coreos/etcd/client"
 	"time"
-	"Gofast/gofast/util"
+	"gopera/gopera/util"
 	"context"
 	"strings"
 	"fmt"

@@ -1,4 +1,4 @@
-package gofast
+package gopera
 
 import (
 	"testing"
