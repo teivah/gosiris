@@ -1,8 +1,6 @@
-# gofast
+gopera is a simple library to bring the actor model on top of Golang.
 
-gofast is a simple library to bring the actor model on top of Golang.
-
-## Features
+# Features
 * Send message from one actor to another using the **mailbox** principle
 * **Forward** message to maintain the original sender
 * **Hierarchy** concept between the different actors
@@ -11,43 +9,55 @@ gofast is a simple library to bring the actor model on top of Golang.
 * **Distributed actor system** across the network using an **AMQP broker**
 * Actors **discoverability** using etcd 
 
-## Hello world
+# Hello world
 The gofast hello world is the following:
 
 ```go
-//Create a simple parent actor
-parentActor := Actor{}
-//Close the actor
-defer parentActor.Close()
+package main
 
-//Register the parent actor
-ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+import (
+	"github.com/teivah/gopera/gopera"
+)
 
-//Create a simple child actor
-childActor := Actor{}
-//Close the actor
-defer childActor.Close()
+func main() {
+	//Init a local actor system
+	gopera.InitLocalActorSystem()
 
-//Register the reactions to event types (here a reaction to message)
-childActor.React("message", func(message Message) {
-    message.Self.LogInfo("Received %v\n", message.Data)
-})
+	//Create an actor
+	parentActor := gopera.Actor{}
+	//Close an actor
+	defer parentActor.Close()
 
-//Register the child actor
-ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
+	//Create an actor
+	childActor := gopera.Actor{}
+	//Close an actor
+	defer childActor.Close()
+	//Register a reaction to event types ("message" in this case)
+	childActor.React("message", func(message gopera.Message) {
+		message.Self.LogInfo("Received %v\n", message.Data)
+	})
 
-//Retrieve the parent and child actor reference
-parentActorRef, _ := ActorSystem().ActorOf("parentActor")
-childActorRef, _ := ActorSystem().ActorOf("childActor")
+	//Register an actor to the system
+	gopera.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+	//Register an actor by spawning it
+	gopera.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
-//Send a message from the parent to the child actor
-childActorRef.Send("message", "Hi! How are you?", parentActorRef)
+	//Retrieve actor references
+	parentActorRef, _ := gopera.ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := gopera.ActorSystem().ActorOf("childActor")
+
+	//Send a message from one actor to another (from parentActor to childActor)
+	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
+}
 ```
 
 ```
 [childActor] Received Hi! How are you?
 ```
 
-## Participation
+# Contributing
 
-If you want to participate, feel free to contact me contact me [@teivah](https://twitter.com/teivah)
+* Open an issue if you need a new feature or if you spotted a bug
+* Feel free to propose pull requests
+
+Any contribution is welcome!
