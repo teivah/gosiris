@@ -1,7 +1,7 @@
 gopera is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Golang.
 
 # Principles
-gopera is based on three principles: Configure, Discover, React
+gopera is based on three principles: **Configure**, **Discover**, **React**
 * Configure the actor behaviour depending on event types
 * Discover the other actors dynamically registered in a remote registry
 * React on events sent by actors
