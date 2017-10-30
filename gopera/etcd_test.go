@@ -70,3 +70,7 @@ func TestGet(t *testing.T) {
 
 	util.LogInfo("conf: %v", value)
 }
+
+func TestWatch(t *testing.T) {
+	c.Watch()
+}

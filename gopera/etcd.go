@@ -39,6 +39,33 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 	return nil
 }
 
+func (etcdClient *etcdClient) Watch() error {
+	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{0, true})
+
+	for {
+		r, err := w.Next(context.Background())
+
+		if err != nil {
+			util.LogError("etcd watch error: %v", err)
+			return err
+		}
+
+		k, v := parseNode(r.Node)
+
+		conf[k] = v
+	}
+	return nil
+}
+
+func parseNode(node *client.Node) (string, *ActorOptions) {
+	v := node.Value
+	a :=
+		strings.Split(v, delimiter)
+	k := node.Key
+
+	return k[len(actors_configuration):], &ActorOptions{true, a[0], a[1], a[2]}
+}
+
 func (etcdClient *etcdClient) ParseConfiguration() (map[string]OptionsInterface, error) {
 	resp, err := etcdClient.Get(actors_configuration)
 
@@ -50,11 +77,8 @@ func (etcdClient *etcdClient) ParseConfiguration() (map[string]OptionsInterface,
 
 	nodes := resp.Node.Nodes
 	for i := 0; i < nodes.Len(); i++ {
-		v := nodes[i].Value
-		a :=
-			strings.Split(v, delimiter)
-		k := nodes[i].Key
-		conf[k[len(actors_configuration):]] = &ActorOptions{true, a[0], a[1], a[2]}
+		k, v := parseNode(nodes[i])
+		conf[k] = v
 	}
 
 	return conf, nil
