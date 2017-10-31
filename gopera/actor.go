@@ -41,10 +41,7 @@ type actorInterface interface {
 }
 
 func (actor *Actor) Close() {
-	if actor.Mailbox() != nil { //If local
-		close(actor.mailbox)
-	}
-	ActorSystem().unregisterActor(actor.name)
+	ActorSystem().close(actor.name, actor)
 }
 
 func (actor *Actor) Stringer() string {

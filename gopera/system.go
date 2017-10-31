@@ -105,7 +105,11 @@ func (system *actorSystem) cbDelete(name string) {
 	util.LogInfo("Actor %v removed from the local system", name)
 }
 
-func (system *actorSystem) unregisterActor(name string) {
+func (system *actorSystem) close(name string, directRef actorInterface) {
+	if directRef.Mailbox() != nil { //If local
+		close(directRef.Mailbox())
+	}
+
 	_, err := system.ActorOf(name)
 	if err != nil {
 		util.LogError("Actor %v not registered", name)
