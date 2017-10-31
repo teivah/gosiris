@@ -10,10 +10,12 @@ func init() {
 }
 
 const (
-	json_messageType = "messageType"
-	json_data        = "data"
-	json_sender      = "sender"
-	json_self        = "self"
+	GoperaMsgPoisonPill  = "GoperaPoisonPill"
+	GoperaMsgChildClosed = "GoperaChildClosed"
+	json_messageType     = "messageType"
+	json_data            = "data"
+	json_sender          = "sender"
+	json_self            = "self"
 )
 
 type Message struct {
@@ -61,8 +63,6 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-var PoisonPill = "poisonpill"
-
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface) error {
 	defer func() {
 		if r := recover(); r != nil {
@@ -70,7 +70,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 		}
 	}()
 
-	InfoLogger.Printf("Dispatching message")
+	InfoLogger.Printf("Dispatching message %v", messageType)
 
 	m := Message{messageType, data, sender, receiver}
 

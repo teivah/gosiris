@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-var root = &Actor{}
-
-const (
-	remote_amqp = "remote_amqp"
-)
-
 func RootActor() *Actor {
 	return root
 }

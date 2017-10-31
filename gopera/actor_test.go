@@ -172,7 +172,7 @@ func TestBecomeUnbecome(t *testing.T) {
 	childActorRef.Send("message", "hello!", parentActorRef)
 }
 
-func TestNewRemoteActor(t *testing.T) {
+func TestRemote(t *testing.T) {
 	InitDistributedActorSystem("http://etcd:2379")
 	defer CloseActorSystem()
 
@@ -228,13 +228,45 @@ func TestAutocloseFalse(t *testing.T) {
 	defer CloseActorSystem()
 
 	actorY := new(Actor)
-	actorY.React(PoisonPill, func(message Message) {
+	actorY.React(GoperaMsgPoisonPill, func(message Message) {
 		message.Self.LogInfo("Received a poison pill, closing.")
 		actorY.Close()
 	})
-	//defer actorY.Close()
+
 	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetAutoclose(false))
 	a, _ := ActorSystem().ActorOf("actorY")
 
 	a.AskForClose(a)
+}
+
+func TestChildClosedNotification(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
+	actorParent := new(Actor)
+	defer actorParent.Close()
+	actorParent.React(GoperaMsgChildClosed, func(message Message) {
+		message.Self.LogInfo("My child is closed")
+	})
+
+	actorChild := new(Actor)
+	actorChild.React("do", func(message Message) {
+		if message.Data == 0 {
+			message.Self.LogInfo("I feel like being closed")
+			actorChild.Close()
+		} else {
+			message.Self.LogInfo("Received %v", message.Data)
+		}
+	})
+
+	ActorSystem().RegisterActor("ActorParent", actorParent, nil)
+	ActorSystem().SpawnActor(actorParent, "ActorChild", actorChild, nil)
+
+	actorParentRef, _ := ActorSystem().ActorOf("ActorParent")
+	actorChildRef, _ := ActorSystem().ActorOf("ActorChild")
+
+	actorChildRef.Send("do", 1, actorParentRef)
+	actorChildRef.Send("do", 0, actorParentRef)
+
+	time.Sleep(500 * time.Millisecond)
 }

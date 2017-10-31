@@ -4,8 +4,14 @@ import (
 	"fmt"
 )
 
+var root *Actor
 var actorSystemInstance actorSystem
 var registry registryInterface
+
+func init() {
+	root = &Actor{}
+	root.name = "root"
+}
 
 func InitLocalActorSystem() {
 	actorSystemInstance = actorSystem{}
@@ -55,6 +61,11 @@ type actorSystem struct {
 }
 
 func (system *actorSystem) RegisterActor(name string, actor actorInterface, options OptionsInterface) error {
+	if name == root.name {
+		ErrorLogger.Printf("Register an actor whose name is %v is not allowed", name)
+		return fmt.Errorf("register an actor whose name is %v is not allowed", name)
+	}
+
 	InfoLogger.Printf("Registering new actor %v", name)
 	return system.SpawnActor(RootActor(), name, actor, options)
 }
@@ -74,6 +85,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 
 	actor.setName(name)
 	actor.setParent(parent)
+	options.setParent(parent.Name())
 	if !options.Remote() {
 		actor.setMailbox(make(chan Message))
 	} else {
@@ -140,8 +152,19 @@ func (system *actorSystem) closeLocalActor(name string) {
 		return
 	}
 
-	m := v.actor.Mailbox()
+	//If the actor has a parent we send him a message
+	if v.actor.Parent() != nil {
+		parentName := v.actor.Parent().Name()
+		if parentName != root.name {
+			p, err := system.actor(parentName)
+			if err != nil {
+				ErrorLogger.Printf("Parent %v not registered", parentName)
+			}
+			p.actorRef.Send(GoperaMsgChildClosed, name, v.actorRef)
+		}
+	}
 
+	m := v.actor.Mailbox()
 	if m != nil {
 		close(m)
 	}
@@ -194,7 +217,7 @@ func (system *actorSystem) Invoke(message Message) error {
 		return err
 	}
 
-	if message.messageType == PoisonPill {
+	if message.messageType == GoperaMsgPoisonPill {
 		InfoLogger.Printf("Actor %v has received a poison pill", actorAssociation.actor.Name())
 
 		if actorAssociation.options.Autoclose() {
