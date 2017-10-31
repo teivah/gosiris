@@ -127,7 +127,7 @@ func (system *actorSystem) unregisterActor(name string) {
 func (system *actorSystem) actor(name string) (actorAssociation, error) {
 	ref, exists := system.actors[name]
 	if !exists {
-		util.LogError("actor %v not registered", name)
+		util.LogError("Actor %v not registered", name)
 		return actorAssociation{}, fmt.Errorf("actor %v not registered", name)
 	}
 

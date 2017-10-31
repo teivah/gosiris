@@ -54,7 +54,7 @@ func TestStatefulness(t *testing.T) {
 	childActor.hello = make(map[string]bool)
 
 	parentActor := ParentActor{}
-	defer parentActor.Close()
+	//defer parentActor.Close()
 
 	f := func(message Message) {
 		message.Self.LogInfo("Receive response %v\n", message.Data)
