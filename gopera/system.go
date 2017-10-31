@@ -166,7 +166,11 @@ func (system *actorSystem) Invoke(message Message) error {
 
 	if message.messageType == poisonPill {
 		util.LogInfo("Actor %v has received a poison pill", actorAssociation.actor.Name())
-		actorAssociation.actor.Close()
+
+		if actorAssociation.options.Autoclose() {
+			util.LogInfo("Autoclose actor %v", actorAssociation.actor.Name())
+			actorAssociation.actor.Close()
+		}
 		return nil
 	}
 

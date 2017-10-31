@@ -67,7 +67,7 @@ var poisonPill = "poisonpill"
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface) error {
 	defer func() {
 		if r := recover(); r != nil {
-			util.LogInfo("Recovered in %v", r)
+			util.LogInfo("Dispatch recovered in %v", r)
 		}
 	}()
 
@@ -99,7 +99,7 @@ func receive(actor actorInterface, options OptionsInterface) {
 	if !options.Remote() {
 		defer func() {
 			if r := recover(); r != nil {
-				util.LogInfo("Recovered in %v", r)
+				util.LogInfo("Receive recovered in %v", r)
 			}
 		}()
 

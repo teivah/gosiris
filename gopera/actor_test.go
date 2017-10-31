@@ -213,3 +213,15 @@ func TestUnregister(t *testing.T) {
 	a, _ := ActorSystem().ActorOf("actorY")
 	a.AskForClose(a)
 }
+
+func TestAutoclose(t *testing.T) {
+	actorY := new(Actor).React("hello", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+		message.Sender.Send("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
+	})
+	defer actorY.Close()
+	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetAutoclose(false))
+	a, _ := ActorSystem().ActorOf("actorY")
+	
+	a.AskForClose(a)
+}

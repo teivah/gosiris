@@ -1,18 +1,21 @@
 package gopera
 
 type ActorOptions struct {
-	remote      bool
+	remote      bool //Default: false
 	remoteType  string
 	url         string
 	destination string
+	autoclose   bool //Default: true
 }
 
 type OptionsInterface interface {
+	SetUrl(string) OptionsInterface
 	SetRemote(bool) OptionsInterface
+	SetAutoclose(bool) OptionsInterface
 	Remote() bool
+	Autoclose() bool
 	SetRemoteType(string) OptionsInterface
 	RemoteType() string
-	SetUrl(string) OptionsInterface
 	Url() string
 	SetDestination(string) OptionsInterface
 	Destination() string
@@ -25,6 +28,15 @@ func (options *ActorOptions) SetRemote(b bool) OptionsInterface {
 
 func (options *ActorOptions) Remote() bool {
 	return options.remote
+}
+
+func (options *ActorOptions) SetAutoclose(b bool) OptionsInterface {
+	options.autoclose = b
+	return options
+}
+
+func (options *ActorOptions) Autoclose() bool {
+	return options.autoclose
 }
 
 func (options *ActorOptions) SetRemoteType(s string) OptionsInterface {

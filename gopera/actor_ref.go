@@ -52,7 +52,7 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 }
 
 func (ref ActorRef) AskForClose(sender ActorRefInterface) {
-	util.LogError("Asking to close %v", ref.name)
+	util.LogInfo("Asking to close %v", ref.name)
 
 	actor, err := ActorSystem().actor(ref.name)
 
