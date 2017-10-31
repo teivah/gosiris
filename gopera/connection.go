@@ -2,7 +2,6 @@ package gopera
 
 import (
 	"fmt"
-	"gopera/gopera/util"
 )
 
 var remoteConnections map[string]RemoteConnectionInterface
@@ -25,13 +24,13 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 			c.Configure(v.Url())
 			err := c.Connection()
 			if err != nil {
-				util.LogError("Failed to initialize the connection with %v: %v", v, err)
+				ErrorLogger.Printf("Failed to initialize the connection with %v: %v", v, err)
 			}
 			remoteConnections[k] = &c
 		}
 	}
 
-	util.LogInfo("Manager: %v", remoteConnections)
+	InfoLogger.Printf("Remote connections: %v", remoteConnections)
 }
 
 func AddConnection(name string, conf OptionsInterface) {
@@ -40,24 +39,24 @@ func AddConnection(name string, conf OptionsInterface) {
 		c.Configure(conf.Url())
 		err := c.Connection()
 		if err != nil {
-			util.LogError("Failed to initialize the connection with %v: %v", name, err)
+			ErrorLogger.Printf("Failed to initialize the connection with %v: %v", name, err)
 		}
 		remoteConnections[name] = &c
-		util.LogInfo("AMQP %v connection added", name)
+		InfoLogger.Printf("AMQP %v connection added", name)
 	}
 }
 
 func DeleteConnection(name string) error {
 	v, exists := remoteConnections[name]
 	if !exists {
-		util.LogError("Delete error: connection %v not registered", name)
+		ErrorLogger.Printf("Delete error: connection %v not registered", name)
 		return fmt.Errorf("delete error: connection %v not registered", name)
 	}
 
 	v.Close()
 	delete(remoteConnections, name)
 
-	util.LogInfo("Connection %v deleted", name)
+	InfoLogger.Printf("Connection %v deleted", name)
 
 	return nil
 }
@@ -65,7 +64,7 @@ func DeleteConnection(name string) error {
 func RemoteConnection(name string) (RemoteConnectionInterface, error) {
 	v, exists := remoteConnections[name]
 	if !exists {
-		util.LogError("Remote connection error: connection %v not registered", name)
+		ErrorLogger.Printf("Remote connection error: connection %v not registered", name)
 		return nil, fmt.Errorf("remote connection error: connection %v not registered", name)
 	}
 

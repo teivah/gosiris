@@ -4,7 +4,6 @@ import (
 	"time"
 	"math/rand"
 	"testing"
-	"gopera/gopera/util"
 )
 
 var c etcdClient
@@ -68,7 +67,7 @@ func TestFixed(t *testing.T) {
 func TestGet(t *testing.T) {
 	value, _ := c.ParseConfiguration()
 
-	util.LogInfo("conf: %v", value)
+	InfoLogger.Printf("conf: %v", value)
 }
 
 func TestWatch(t *testing.T) {

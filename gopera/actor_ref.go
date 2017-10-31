@@ -3,7 +3,6 @@ package gopera
 import (
 	"fmt"
 	"log"
-	"gopera/gopera/util"
 )
 
 type ActorRef struct {
@@ -25,7 +24,7 @@ type ActorRefInterface interface {
 func newActorRef(name string) ActorRefInterface {
 	ref := ActorRef{}
 	ref.infoLogger, ref.errorLogger =
-		util.NewActorLogger(name)
+		NewActorLogger(name)
 	ref.name = name
 	return ref
 }
@@ -42,7 +41,7 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
-		util.LogError("Failed to send from %v to %v: %v", sender.Name(), ref.name, err)
+		ErrorLogger.Printf("Failed to send from %v to %v: %v", sender.Name(), ref.name, err)
 		return err
 	}
 
@@ -52,12 +51,12 @@ func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefIn
 }
 
 func (ref ActorRef) AskForClose(sender ActorRefInterface) {
-	util.LogInfo("Asking to close %v", ref.name)
+	InfoLogger.Printf("Asking to close %v", ref.name)
 
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
-		util.LogInfo("Actor %v already closed", ref.name)
+		InfoLogger.Printf("Actor %v already closed", ref.name)
 		return
 	}
 

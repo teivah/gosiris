@@ -1,7 +1,6 @@
 package gopera
 
 import (
-	"gopera/gopera/util"
 	"github.com/streadway/amqp"
 	"encoding/json"
 )
@@ -19,19 +18,19 @@ func (amqpConnection *AmqpConnection) Configure(url string) {
 func (amqpConnection *AmqpConnection) Connection() error {
 	c, err := amqp.Dial(amqpConnection.url)
 	if err != nil {
-		util.LogError("Failed to connect to the AMQP server %v", amqpConnection.url)
+		ErrorLogger.Printf("Failed to connect to the AMQP server %v", amqpConnection.url)
 		return err
 	}
 	amqpConnection.connection = c
 
 	ch, err := c.Channel()
 	if err != nil {
-		util.LogError("Failed to open an AMQP channel on the server %v", amqpConnection.url)
+		ErrorLogger.Printf("Failed to open an AMQP channel on the server %v", amqpConnection.url)
 		return err
 	}
 	amqpConnection.channel = ch
 
-	util.LogInfo("Connected to %v", amqpConnection.url)
+	InfoLogger.Printf("Connected to %v", amqpConnection.url)
 
 	return nil
 }
@@ -47,7 +46,7 @@ func (amqpConnection *AmqpConnection) Receive(queueName string) {
 	)
 
 	if err != nil {
-		util.LogError("Error while declaring queue %v: %v", queueName, err)
+		ErrorLogger.Printf("Error while declaring queue %v: %v", queueName, err)
 	}
 
 	msgs, err := amqpConnection.channel.Consume(
@@ -74,7 +73,7 @@ func (amqpConnection *AmqpConnection) Close() {
 
 func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 	json := string(data)
-	util.LogInfo("Sending %v", json)
+	InfoLogger.Printf("Sending %v", json)
 
 	q, err := amqpConnection.channel.QueueDeclare(
 		destination, // name
@@ -85,7 +84,7 @@ func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 		nil,         // arguments
 	)
 	if err != nil {
-		util.LogError("Error while declaring queue %v: %v", destination, err)
+		ErrorLogger.Printf("Error while declaring queue %v: %v", destination, err)
 	}
 
 	body := data
@@ -100,6 +99,6 @@ func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 		})
 
 	if err != nil {
-		util.LogError("Error while publishing a message to queue %v: %v", destination, err)
+		ErrorLogger.Printf("Error while publishing a message to queue %v: %v", destination, err)
 	}
 }

@@ -3,7 +3,6 @@ package gopera
 import (
 	"github.com/coreos/etcd/client"
 	"time"
-	"gopera/gopera/util"
 	"context"
 	"strings"
 	"fmt"
@@ -30,7 +29,7 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 
 	c, err := client.New(cfg)
 	if err != nil {
-		util.LogError("etcd connection error %v", err)
+		ErrorLogger.Printf("etcd connection error %v", err)
 		return err
 	}
 	etcdClient.api = client.NewKeysAPI(c)
@@ -40,6 +39,10 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 	return nil
 }
 
+func (etcdClient *etcdClient) Close() {
+	etcdClient.Close()
+}
+
 func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDelete func(string)) error {
 	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{0, true})
 
@@ -47,19 +50,19 @@ func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDele
 		r, err := w.Next(context.Background())
 
 		if err != nil {
-			util.LogError("etcd watch error: %v", err)
+			ErrorLogger.Printf("etcd watch error: %v", err)
 			return err
 		}
 
 		if r.Action == action_delete {
 			k := r.Node.Key
-			util.LogInfo("Actor %v removed from the registry", k)
+			InfoLogger.Printf("Actor %v removed from the registry", k)
 
 			cbDelete(k)
 		} else if r.Action == action_set {
 			k, v := parseNode(r.Node)
 
-			util.LogInfo("New actor %v added to the registry", k)
+			InfoLogger.Printf("New actor %v added to the registry", k)
 
 			cbCreate(k, v)
 		}
@@ -122,7 +125,7 @@ func (etcdClient *etcdClient) Set(key string, value string) error {
 	_, err := etcdClient.api.Set(context.Background(), key, value, nil)
 
 	if err != nil {
-		util.LogError("etcd set %v error %v", key, err)
+		ErrorLogger.Printf("etcd set %v error %v", key, err)
 	}
 
 	return err
@@ -130,7 +133,7 @@ func (etcdClient *etcdClient) Set(key string, value string) error {
 
 func (etcdClient *etcdClient) Delete(key string) error {
 	_, err := etcdClient.api.Delete(context.Background(), key, nil)
-	
+
 	return err
 }
 
@@ -138,7 +141,7 @@ func (etcdClient *etcdClient) Get(key string) (*client.Response, error) {
 	resp, err := etcdClient.api.Get(context.Background(), key, &client.GetOptions{false, false, false})
 
 	if err != nil {
-		util.LogError("etcd get %v error %v", key, err)
+		ErrorLogger.Printf("etcd get %v error %v", key, err)
 		return resp, err
 	}
 

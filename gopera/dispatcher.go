@@ -1,7 +1,6 @@
 package gopera
 
 import (
-	"gopera/gopera/util"
 	"encoding/json"
 	"fmt"
 )
@@ -37,7 +36,7 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 	var m map[string]string
 	err := json.Unmarshal(b, &m)
 	if err != nil {
-		util.LogError("Unmarshalling error: %v", err)
+		ErrorLogger.Printf("Unmarshalling error: %v", err)
 		return err
 	}
 
@@ -67,17 +66,17 @@ var PoisonPill = "poisonpill"
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface) error {
 	defer func() {
 		if r := recover(); r != nil {
-			util.LogInfo("Dispatch recovered in %v", r)
+			InfoLogger.Printf("Dispatch recovered in %v", r)
 		}
 	}()
 
-	util.LogInfo("Dispatching message")
+	InfoLogger.Printf("Dispatching message")
 
 	m := Message{messageType, data, sender, receiver}
 
 	if !options.Remote() {
 		channel <- m
-		util.LogInfo("Message dispatched to local channel")
+		InfoLogger.Printf("Message dispatched to local channel")
 	} else {
 		d, err := RemoteConnection(receiver.Name())
 		if err != nil {
@@ -86,12 +85,12 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 
 		json, err := json.Marshal(m)
 		if err != nil {
-			util.LogError("JSON marshalling error: %v", err)
+			ErrorLogger.Printf("JSON marshalling error: %v", err)
 			return err
 		}
 
 		d.Send(options.Destination(), json)
-		util.LogInfo("Message dispatched to remote channel %v", options.Destination())
+		InfoLogger.Printf("Message dispatched to remote channel %v", options.Destination())
 	}
 
 	return nil
@@ -101,7 +100,7 @@ func receive(actor actorInterface, options OptionsInterface) {
 	if !options.Remote() {
 		defer func() {
 			if r := recover(); r != nil {
-				util.LogInfo("Receive recovered in %v", r)
+				InfoLogger.Printf("Receive recovered in %v", r)
 			}
 		}()
 

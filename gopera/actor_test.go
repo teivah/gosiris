@@ -16,13 +16,18 @@ type ChildActor struct {
 }
 
 func init() {
-	InitDistributedActorSystem("http://etcd:2379")
+	//InitDistributedActorSystem("http://etcd:2379")
 }
 
 func TestBasic(t *testing.T) {
+	//Init a local actor system
+	InitLocalActorSystem()
+	//Defer the actor system closure
+	defer CloseActorSystem()
+
 	//Create a simple parent actor
 	parentActor := Actor{}
-	//Close the actor
+	//Defer the actor closure
 	defer parentActor.Close()
 
 	//Register the parent actor
@@ -30,7 +35,7 @@ func TestBasic(t *testing.T) {
 
 	//Create a simple child actor
 	childActor := Actor{}
-	//Close the actor
+	//Defer the actor system closure
 	defer childActor.Close()
 
 	//Register the reactions to event types (here a reaction to message)
@@ -50,11 +55,14 @@ func TestBasic(t *testing.T) {
 }
 
 func TestStatefulness(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
 	childActor := ChildActor{}
 	childActor.hello = make(map[string]bool)
 
 	parentActor := ParentActor{}
-	//defer parentActor.Close()
+	defer parentActor.Close()
 
 	f := func(message Message) {
 		message.Self.LogInfo("Receive response %v\n", message.Data)
@@ -84,12 +92,12 @@ func TestStatefulness(t *testing.T) {
 
 	childActorRef.Send("hello", "teivah", parentActorRef)
 	childActorRef.Send("hello", "teivah", parentActorRef)
-
-	time.Sleep(500 * time.Millisecond)
-	childActorRef.Send("hello", "teivah2", parentActorRef)
 }
 
 func TestForward(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
 	parentActor := Actor{}
 	defer parentActor.Close()
 	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
@@ -124,6 +132,9 @@ func TestForward(t *testing.T) {
 }
 
 func TestBecomeUnbecome(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
 	angry := func(message Message) {
 		if message.Data == "happy" {
 			message.Self.LogInfo("Unbecome\n")
@@ -162,6 +173,9 @@ func TestBecomeUnbecome(t *testing.T) {
 }
 
 func TestNewRemoteActor(t *testing.T) {
+	InitDistributedActorSystem("http://etcd:2379")
+	defer CloseActorSystem()
+
 	actor1 := new(Actor).React("reply", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
 	})
@@ -183,6 +197,9 @@ func TestNewRemoteActor(t *testing.T) {
 }
 
 func TestUnregister(t *testing.T) {
+	InitDistributedActorSystem("http://etcd:2379")
+	defer CloseActorSystem()
+
 	actorY := new(Actor).React("hello", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
 		message.Sender.Send("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
@@ -195,6 +212,9 @@ func TestUnregister(t *testing.T) {
 }
 
 func TestAutocloseTrue(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
 	actorY := new(Actor)
 	defer actorY.Close()
 	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetAutoclose(false))
@@ -204,6 +224,9 @@ func TestAutocloseTrue(t *testing.T) {
 }
 
 func TestAutocloseFalse(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
 	actorY := new(Actor)
 	actorY.React(PoisonPill, func(message Message) {
 		message.Self.LogInfo("Received a poison pill, closing.")
