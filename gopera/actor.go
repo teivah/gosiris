@@ -92,6 +92,6 @@ func (actor *Actor) Forward(message Message, destinations ...string) {
 		if err != nil {
 			fmt.Errorf("actor %v is not part of the actor system", v)
 		}
-		actorRef.Send(message.messageType, message.Data, message.Sender)
+		actorRef.Tell(message.messageType, message.Data, message.Sender)
 	}
 }

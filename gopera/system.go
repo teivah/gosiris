@@ -160,7 +160,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 			if err != nil {
 				ErrorLogger.Printf("Parent %v not registered", parentName)
 			}
-			p.actorRef.Send(GoperaMsgChildClosed, name, v.actorRef)
+			p.actorRef.Tell(GoperaMsgChildClosed, name, v.actorRef)
 		}
 	}
 

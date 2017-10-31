@@ -50,8 +50,8 @@ func TestBasic(t *testing.T) {
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	childActorRef, _ := ActorSystem().ActorOf("childActor")
 
-	//Send a message from the parent to the child actor
-	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
+	//Tell a message from the parent to the child actor
+	childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
 }
 
 func TestStatefulness(t *testing.T) {
@@ -77,12 +77,12 @@ func TestStatefulness(t *testing.T) {
 		name := message.Data.(string)
 
 		if _, ok := childActor.hello[name]; ok {
-			message.Sender.Send("error", "I already know you!", message.Self)
-			childActor.Parent().Send("help", "Daddy help me!", message.Self)
+			message.Sender.Tell("error", "I already know you!", message.Self)
+			childActor.Parent().Tell("help", "Daddy help me!", message.Self)
 			childActor.Close()
 		} else {
 			childActor.hello[message.Data.(string)] = true
-			message.Sender.Send("helloback", "hello "+name+"!", message.Self)
+			message.Sender.Tell("helloback", "hello "+name+"!", message.Self)
 		}
 	})
 	ActorSystem().SpawnActor(&parentActor, "child", &childActor, nil)
@@ -90,8 +90,8 @@ func TestStatefulness(t *testing.T) {
 	childActorRef, _ := ActorSystem().ActorOf("child")
 	parentActorRef, _ := ActorSystem().ActorOf("parent")
 
-	childActorRef.Send("hello", "teivah", parentActorRef)
-	childActorRef.Send("hello", "teivah", parentActorRef)
+	childActorRef.Tell("hello", "teivah", parentActorRef)
+	childActorRef.Tell("hello", "teivah", parentActorRef)
 }
 
 func TestForward(t *testing.T) {
@@ -127,7 +127,7 @@ func TestForward(t *testing.T) {
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	forwarderActorRef, _ := ActorSystem().ActorOf("forwarderActor")
 
-	forwarderActorRef.Send("message", "to be forwarded", parentActorRef)
+	forwarderActorRef.Tell("message", "to be forwarded", parentActorRef)
 	time.Sleep(500 * time.Millisecond)
 }
 
@@ -165,11 +165,11 @@ func TestBecomeUnbecome(t *testing.T) {
 	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
 	childActorRef, _ := ActorSystem().ActorOf("childActor")
 
-	childActorRef.Send("message", "hello!", parentActorRef)
-	childActorRef.Send("message", "angry", parentActorRef)
-	childActorRef.Send("message", "hello!", parentActorRef)
-	childActorRef.Send("message", "happy", parentActorRef)
-	childActorRef.Send("message", "hello!", parentActorRef)
+	childActorRef.Tell("message", "hello!", parentActorRef)
+	childActorRef.Tell("message", "angry", parentActorRef)
+	childActorRef.Tell("message", "hello!", parentActorRef)
+	childActorRef.Tell("message", "happy", parentActorRef)
+	childActorRef.Tell("message", "hello!", parentActorRef)
 }
 
 func TestRemote(t *testing.T) {
@@ -184,7 +184,7 @@ func TestRemote(t *testing.T) {
 
 	actor2 := new(Actor).React("message", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
-		message.Sender.Send("reply", "hello back", message.Self)
+		message.Sender.Tell("reply", "hello back", message.Self)
 	})
 	defer actor2.Close()
 	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
@@ -192,7 +192,7 @@ func TestRemote(t *testing.T) {
 	actorRef1, _ := ActorSystem().ActorOf("actorX")
 	actorRef2, _ := ActorSystem().ActorOf("actorY")
 
-	actorRef2.Send("message", "hello", actorRef1)
+	actorRef2.Tell("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)
 }
 
@@ -202,7 +202,7 @@ func TestRemoteClose(t *testing.T) {
 
 	actorY := new(Actor).React("hello", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
-		message.Sender.Send("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
+		message.Sender.Tell("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
 	})
 	defer actorY.Close()
 	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
@@ -265,8 +265,8 @@ func TestChildClosedNotification(t *testing.T) {
 	actorParentRef, _ := ActorSystem().ActorOf("ActorParent")
 	actorChildRef, _ := ActorSystem().ActorOf("ActorChild")
 
-	actorChildRef.Send("do", 1, actorParentRef)
-	actorChildRef.Send("do", 0, actorParentRef)
+	actorChildRef.Tell("do", 1, actorParentRef)
+	actorChildRef.Tell("do", 0, actorParentRef)
 
 	time.Sleep(500 * time.Millisecond)
 }

@@ -12,7 +12,7 @@ type ActorRef struct {
 }
 
 type ActorRefInterface interface {
-	Send(string, interface{}, ActorRefInterface) error
+	Tell(string, interface{}, ActorRefInterface) error
 	AskForClose(ActorRefInterface)
 	LogInfo(string, ...interface{})
 	LogError(string, ...interface{})
@@ -37,7 +37,7 @@ func (ref ActorRef) LogError(format string, a ...interface{}) {
 	ref.errorLogger.Printf(format, a...)
 }
 
-func (ref ActorRef) Send(messageType string, data interface{}, sender ActorRefInterface) error {
+func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefInterface) error {
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
