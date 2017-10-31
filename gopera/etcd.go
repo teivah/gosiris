@@ -13,6 +13,8 @@ const (
 	actors_configuration = "/gopera/actor/"
 	prefix               = "gofast://"
 	delimiter            = "#"
+	action_delete        = "delete"
+	action_set           = "set"
 )
 
 type etcdClient struct {
@@ -38,7 +40,7 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 	return nil
 }
 
-func (etcdClient *etcdClient) Watch(f func(string, *ActorOptions)) error {
+func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDelete func(string)) error {
 	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{0, true})
 
 	for {
@@ -49,11 +51,18 @@ func (etcdClient *etcdClient) Watch(f func(string, *ActorOptions)) error {
 			return err
 		}
 
-		k, v := parseNode(r.Node)
+		if r.Action == action_delete {
+			k := r.Node.Key
+			util.LogInfo("Actor %v removed from the registry", k)
 
-		util.LogInfo("New actor detected: %v", k)
+			cbDelete(k)
+		} else if r.Action == action_set {
+			k, v := parseNode(r.Node)
 
-		f(k, v)
+			util.LogInfo("New actor %v added to the registry", k)
+
+			cbCreate(k, v)
+		}
 	}
 	return nil
 }

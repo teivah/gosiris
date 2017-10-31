@@ -3,6 +3,7 @@ package gopera
 import (
 	"testing"
 	"time"
+	"fmt"
 )
 
 type ParentActor struct {
@@ -199,4 +200,16 @@ func TestNewRemoteActor(t *testing.T) {
 
 	actorRef2.Send("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)
+}
+
+func TestUnregister(t *testing.T) {
+	actorY := new(Actor).React("hello", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+		message.Sender.Send("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
+	})
+	defer actorY.Close()
+	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
+
+	a, _ := ActorSystem().ActorOf("actorY")
+	a.AskForClose(a)
 }

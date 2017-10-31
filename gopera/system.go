@@ -72,7 +72,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 		actor.setMailbox(make(chan Message))
 	} else {
 		registry.RegisterActor(name, options)
-		go registry.Watch(system.callback)
+		go registry.Watch(system.cbCreate, system.cbDelete)
 		AddConnection(name, options)
 	}
 
@@ -86,7 +86,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	return nil
 }
 
-func (system *actorSystem) callback(name string, options *ActorOptions) {
+func (system *actorSystem) cbCreate(name string, options *ActorOptions) {
 	actorRef := newActorRef(name)
 	actor := Actor{}
 	actor.name = name
@@ -97,6 +97,12 @@ func (system *actorSystem) callback(name string, options *ActorOptions) {
 	AddConnection(name, options)
 
 	util.LogInfo("Actor %v added to the local system", name)
+}
+
+func (system *actorSystem) cbDelete(name string) {
+	delete(system.actors, name)
+
+	util.LogInfo("Actor %v removed from the local system", name)
 }
 
 func (system *actorSystem) unregisterActor(name string) {
@@ -110,6 +116,8 @@ func (system *actorSystem) unregisterActor(name string) {
 	if v.options.Remote() {
 		DeleteConnection(name)
 	}
+
+	registry.UnregisterActor(name)
 
 	delete(system.actors, name)
 
