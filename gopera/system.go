@@ -213,7 +213,7 @@ func (system *actorSystem) Invoke(message Message) error {
 	actorAssociation, err := system.actor(message.Self.Name())
 
 	if err != nil {
-		ErrorLogger.Printf("Invoke error: actor %v not registered")
+		ErrorLogger.Printf("Invoke error: actor %v not registered", actorAssociation.actorRef.Name())
 		return err
 	}
 
