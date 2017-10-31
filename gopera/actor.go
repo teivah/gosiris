@@ -44,7 +44,7 @@ func (actor *Actor) Close() {
 	ActorSystem().close(actor.name, actor)
 }
 
-func (actor *Actor) Stringer() string {
+func (actor *Actor) String() string {
 	return actor.name
 }
 
