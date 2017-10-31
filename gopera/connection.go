@@ -5,7 +5,7 @@ import (
 	"gopera/gopera/util"
 )
 
-var manager map[string]RemoteConnectionInterface
+var remoteConnections map[string]RemoteConnectionInterface
 
 type RemoteConnectionInterface interface {
 	Configure(string)
@@ -16,7 +16,7 @@ type RemoteConnectionInterface interface {
 }
 
 func InitRemoteConnections(configuration map[string]OptionsInterface) {
-	manager = make(map[string]RemoteConnectionInterface)
+	remoteConnections = make(map[string]RemoteConnectionInterface)
 
 	//TODO Dynamic management
 	for k, v := range configuration {
@@ -27,11 +27,11 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 			if err != nil {
 				util.LogError("Failed to initialize the connection with %v: %v", v, err)
 			}
-			manager[k] = &c
+			remoteConnections[k] = &c
 		}
 	}
 
-	util.LogInfo("Manager: %v", manager)
+	util.LogInfo("Manager: %v", remoteConnections)
 }
 
 func AddConnection(name string, conf OptionsInterface) {
@@ -42,20 +42,20 @@ func AddConnection(name string, conf OptionsInterface) {
 		if err != nil {
 			util.LogError("Failed to initialize the connection with %v: %v", name, err)
 		}
-		manager[name] = &c
+		remoteConnections[name] = &c
 		util.LogInfo("AMQP %v connection added", name)
 	}
 }
 
 func DeleteConnection(name string) error {
-	v, exists := manager[name]
+	v, exists := remoteConnections[name]
 	if !exists {
 		util.LogError("Delete error: connection %v not registered", name)
 		return fmt.Errorf("delete error: connection %v not registered", name)
 	}
 
 	v.Close()
-	delete(manager, name)
+	delete(remoteConnections, name)
 
 	util.LogInfo("Connection %v deleted", name)
 
@@ -63,7 +63,7 @@ func DeleteConnection(name string) error {
 }
 
 func RemoteConnection(name string) (RemoteConnectionInterface, error) {
-	v, exists := manager[name]
+	v, exists := remoteConnections[name]
 	if !exists {
 		util.LogError("Remote connection error: connection %v not registered", name)
 		return nil, fmt.Errorf("remote connection error: connection %v not registered", name)
