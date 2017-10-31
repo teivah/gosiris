@@ -62,7 +62,7 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-var poisonPill = "poisonpill"
+var PoisonPill = "poisonpill"
 
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface) error {
 	defer func() {
@@ -70,6 +70,8 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 			util.LogInfo("Dispatch recovered in %v", r)
 		}
 	}()
+
+	util.LogInfo("Dispatching message")
 
 	m := Message{messageType, data, sender, receiver}
 
@@ -106,6 +108,7 @@ func receive(actor actorInterface, options OptionsInterface) {
 		c := actor.Mailbox()
 		for {
 			select {
+			//TODO To be improved. If the channel is closed it will trigger the recover function
 			case p := <-c:
 				ActorSystem().Invoke(p)
 			}

@@ -164,14 +164,14 @@ func (system *actorSystem) Invoke(message Message) error {
 		return err
 	}
 
-	if message.messageType == poisonPill {
+	if message.messageType == PoisonPill {
 		util.LogInfo("Actor %v has received a poison pill", actorAssociation.actor.Name())
 
 		if actorAssociation.options.Autoclose() {
 			util.LogInfo("Autoclose actor %v", actorAssociation.actor.Name())
 			actorAssociation.actor.Close()
+			return nil
 		}
-		return nil
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.messageType]

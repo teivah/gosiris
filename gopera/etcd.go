@@ -130,6 +130,11 @@ func (etcdClient *etcdClient) Set(key string, value string) error {
 
 func (etcdClient *etcdClient) Delete(key string) error {
 	_, err := etcdClient.api.Delete(context.Background(), key, nil)
+
+	if err != nil {
+		util.LogError("Key")
+	}
+
 	return err
 }
 

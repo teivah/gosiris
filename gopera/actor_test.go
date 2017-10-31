@@ -89,26 +89,6 @@ func TestStatefulness(t *testing.T) {
 	childActorRef.Send("hello", "teivah2", parentActorRef)
 }
 
-func TestClose(t *testing.T) {
-	parentActor := Actor{}
-	defer parentActor.Close()
-	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
-
-	childActor := Actor{}
-	childActor.React("message", func(message Message) {
-		message.Self.LogInfo("Received %v\n", message.Data)
-	})
-	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
-
-	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
-	childActorRef, _ := ActorSystem().ActorOf("childActor")
-
-	childActorRef.AskForClose(parentActorRef)
-
-	time.Sleep(500 * time.Millisecond)
-	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
-}
-
 func TestForward(t *testing.T) {
 	parentActor := Actor{}
 	defer parentActor.Close()
@@ -214,14 +194,24 @@ func TestUnregister(t *testing.T) {
 	a.AskForClose(a)
 }
 
-func TestAutoclose(t *testing.T) {
-	actorY := new(Actor).React("hello", func(message Message) {
-		message.Self.LogInfo("Received %v", message.Data)
-		message.Sender.Send("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
-	})
+func TestAutocloseTrue(t *testing.T) {
+	actorY := new(Actor)
 	defer actorY.Close()
 	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetAutoclose(false))
 	a, _ := ActorSystem().ActorOf("actorY")
-	
+
+	a.AskForClose(a)
+}
+
+func TestAutocloseFalse(t *testing.T) {
+	actorY := new(Actor)
+	actorY.React(PoisonPill, func(message Message) {
+		message.Self.LogInfo("Received a poison pill, closing.")
+		actorY.Close()
+	})
+	//defer actorY.Close()
+	ActorSystem().RegisterActor("actorY", actorY, new(ActorOptions).SetAutoclose(false))
+	a, _ := ActorSystem().ActorOf("actorY")
+
 	a.AskForClose(a)
 }
