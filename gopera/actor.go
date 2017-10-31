@@ -41,7 +41,7 @@ type actorInterface interface {
 }
 
 func (actor *Actor) Close() {
-	ActorSystem().close(actor.name)
+	ActorSystem().closeLocalActor(actor.name)
 }
 
 func (actor *Actor) String() string {

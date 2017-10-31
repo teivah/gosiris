@@ -46,7 +46,7 @@ func AddConnection(name string, conf OptionsInterface) {
 	}
 }
 
-func DeleteConnection(name string) error {
+func DeleteRemoteActorConnection(name string) error {
 	v, exists := remoteConnections[name]
 	if !exists {
 		ErrorLogger.Printf("Delete error: connection %v not registered", name)

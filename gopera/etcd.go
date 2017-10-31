@@ -33,14 +33,13 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 		return err
 	}
 	etcdClient.api = client.NewKeysAPI(c)
-
 	etcdClient.createDir(actors_configuration)
 
 	return nil
 }
 
 func (etcdClient *etcdClient) Close() {
-	etcdClient.Close()
+
 }
 
 func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDelete func(string)) error {

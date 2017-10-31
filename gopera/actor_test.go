@@ -196,7 +196,7 @@ func TestNewRemoteActor(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 }
 
-func TestUnregister(t *testing.T) {
+func TestRemoteClose(t *testing.T) {
 	InitDistributedActorSystem("http://etcd:2379")
 	defer CloseActorSystem()
 

@@ -98,7 +98,7 @@ func (system *actorSystem) onActorCreatedFromRegistry(name string, options *Acto
 	actor.name = name
 
 	system.actors[name] =
-		actorAssociation{actorRef, &actor, options}
+		actorAssociation{actorRef, nil, options}
 
 	AddConnection(name, options)
 
@@ -106,13 +106,33 @@ func (system *actorSystem) onActorCreatedFromRegistry(name string, options *Acto
 }
 
 func (system *actorSystem) onActorRemovedFromRegistry(name string) {
-	system.close(name)
+	system.removeRemoteActor(name)
 
 	InfoLogger.Printf("Actor %v removed from the local system", name)
 }
 
-//Close a local actor
-func (system *actorSystem) close(name string) {
+func (system *actorSystem) removeRemoteActor(name string) {
+	InfoLogger.Printf("Removing remote actor %v", name)
+
+	v, err := system.actor(name)
+
+	if err != nil {
+		InfoLogger.Printf("Actor %v not registered", name)
+		return
+	}
+
+	if v.options.Remote() {
+		DeleteRemoteActorConnection(name)
+	}
+
+	delete(system.actors, name)
+
+	InfoLogger.Printf("Remote actor %v removed", name)
+}
+
+func (system *actorSystem) closeLocalActor(name string) {
+	InfoLogger.Printf("Closing local actor %v", name)
+
 	v, err := system.actor(name)
 
 	if err != nil {
@@ -124,10 +144,6 @@ func (system *actorSystem) close(name string) {
 
 	if m != nil {
 		close(m)
-	}
-
-	if v.options.Remote() {
-		DeleteConnection(name)
 	}
 
 	if registry != nil {
@@ -142,7 +158,6 @@ func (system *actorSystem) close(name string) {
 func (system *actorSystem) actor(name string) (actorAssociation, error) {
 	ref, exists := system.actors[name]
 	if !exists {
-		ErrorLogger.Printf("Actor %v not registered", name)
 		return actorAssociation{}, fmt.Errorf("actor %v not registered", name)
 	}
 
