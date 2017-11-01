@@ -26,37 +26,33 @@ import (
 
 func main() {
 	//Init a local actor system
-    gopera.InitLocalActorSystem()
-    //Defer the actor system closure
-    defer gopera.CloseActorSystem()
+	gopera.InitLocalActorSystem()
 
-    //Create a simple parent actor
-    parentActor := gopera.Actor{}
-    //Defer the actor closure
-    defer parentActor.Close()
+	//Create an actor
+	parentActor := gopera.Actor{}
+	//Close an actor
+	defer parentActor.Close()
 
-    //Register the parent actor
-    gopera.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+	//Create an actor
+	childActor := gopera.Actor{}
+	//Close an actor
+	defer childActor.Close()
+	//Register a reaction to event types ("message" in this case)
+	childActor.React("message", func(message gopera.Message) {
+		message.Self.LogInfo("Received %v\n", message.Data)
+	})
 
-    //Create a simple child actor
-    childActor := gopera.Actor{}
-    //Defer the actor system closure
-    defer childActor.Close()
+	//Register an actor to the system
+	gopera.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+	//Register an actor by spawning it
+	gopera.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
-    //Register the reactions to event types (here a reaction to message)
-    childActor.React("message", func(message gopera.Message) {
-        message.Self.LogInfo("Received %v\n", message.Data)
-    })
+	//Retrieve actor references
+	parentActorRef, _ := gopera.ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := gopera.ActorSystem().ActorOf("childActor")
 
-    //Register the child actor
-    gopera.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
-
-    //Retrieve the parent and child actor reference
-    parentActorRef, _ := gopera.ActorSystem().ActorOf("parentActor")
-    childActorRef, _ := gopera.ActorSystem().ActorOf("childActor")
-
-    //Tell a message from the parent to the child actor
-    childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
+	//Send a message from one actor to another (from parentActor to childActor)
+	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
 }
 ```
 
