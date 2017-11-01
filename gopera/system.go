@@ -152,6 +152,8 @@ func (system *actorSystem) closeLocalActor(name string) {
 		return
 	}
 
+	fmt.Printf("%v parent %v\n", name, v.actor.Parent())
+
 	//If the actor has a parent we send him a message
 	if v.actor.Parent() != nil {
 		parentName := v.actor.Parent().Name()
