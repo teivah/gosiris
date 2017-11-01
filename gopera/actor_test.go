@@ -239,7 +239,7 @@ func TestAutocloseFalse(t *testing.T) {
 	a.AskForClose(a)
 }
 
-func TestChildClosedNotification(t *testing.T) {
+func TestChildClosedNotificationLocal(t *testing.T) {
 	InitLocalActorSystem()
 	defer CloseActorSystem()
 
@@ -269,4 +269,36 @@ func TestChildClosedNotification(t *testing.T) {
 	actorChildRef.Tell("do", 0, actorParentRef)
 
 	time.Sleep(500 * time.Millisecond)
+}
+
+func TestChildClosedNotificationRemote(t *testing.T) {
+	InitDistributedActorSystem("http://etcd:2379")
+	defer CloseActorSystem()
+
+	actorParent := new(Actor)
+	defer actorParent.Close()
+	actorParent.React(GoperaMsgChildClosed, func(message Message) {
+		message.Self.LogInfo("My child is closed")
+	})
+
+	actorChild := new(Actor)
+	actorChild.React("do", func(message Message) {
+		if message.Data == 0 {
+			message.Self.LogInfo("I feel like being closed")
+			actorChild.Close()
+		} else {
+			message.Self.LogInfo("Received %v", message.Data)
+		}
+	})
+
+	ActorSystem().RegisterActor("ActorParent", actorParent, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actorParent"))
+	ActorSystem().SpawnActor(actorParent, "ActorChild", actorChild, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actorChild"))
+
+	actorParentRef, _ := ActorSystem().ActorOf("ActorParent")
+	actorChildRef, _ := ActorSystem().ActorOf("ActorChild")
+
+	actorChildRef.Tell("do", 1, actorParentRef)
+	actorChildRef.Tell("do", 0, actorParentRef)
+
+	time.Sleep(1000 * time.Millisecond)
 }
