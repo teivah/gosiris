@@ -79,7 +79,7 @@ func (ref ActorRef) Become(messageType string, f func(Message)) error {
 		return fmt.Errorf("react for %v not yet implemented", messageType)
 	}
 
-	actor.actor.Unbecome()[messageType] = v
+	actor.actor.unbecomeHistory()[messageType] = v
 	actor.actor.reactions()[messageType] = f
 
 	return nil
@@ -95,14 +95,14 @@ func (ref ActorRef) Unbecome(messageType string) error {
 		return fmt.Errorf("become for %v not yet implemented", messageType)
 	}
 
-	v, exists := actor.actor.Unbecome()[messageType]
+	v, exists := actor.actor.unbecomeHistory()[messageType]
 
 	if !exists {
 		return fmt.Errorf("unbecome for %v not yet implemented", messageType)
 	}
 
 	actor.actor.reactions()[messageType] = v
-	delete(actor.actor.Unbecome(), messageType)
+	delete(actor.actor.unbecomeHistory(), messageType)
 
 	return nil
 }

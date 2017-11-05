@@ -23,7 +23,7 @@ type RemoteActor struct {
 type actorInterface interface {
 	React(string, func(Message)) *Actor
 	reactions() map[string]func(Message)
-	Unbecome() map[string]func(Message)
+	unbecomeHistory() map[string]func(Message)
 	Mailbox() chan Message
 	setMailbox(chan Message)
 	setName(string)
@@ -57,7 +57,7 @@ func (actor *Actor) reactions() map[string]func(Message) {
 	return actor.conf
 }
 
-func (actor *Actor) Unbecome() map[string]func(Message) {
+func (actor *Actor) unbecomeHistory() map[string]func(Message) {
 	return actor.unbecome
 }
 
