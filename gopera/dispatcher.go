@@ -19,7 +19,7 @@ const (
 )
 
 type Message struct {
-	messageType string
+	MessageType string
 	Data        interface{}
 	Sender      ActorRefInterface
 	Self        ActorRefInterface
@@ -27,7 +27,7 @@ type Message struct {
 
 func (message Message) MarshalJSON() ([]byte, error) {
 	m := make(map[string]string)
-	m[jsonMessageType] = message.messageType
+	m[jsonMessageType] = message.MessageType
 	m[jsonData] = fmt.Sprint(message.Data)
 	m[jsonSender] = message.Sender.Name()
 	m[jsonSelf] = message.Self.Name()
@@ -42,7 +42,7 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	message.messageType = m[jsonMessageType]
+	message.MessageType = m[jsonMessageType]
 
 	message.Data = m[jsonData]
 

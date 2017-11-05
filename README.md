@@ -6,7 +6,7 @@ gopera is based on three principles: **Configure**, **Discover**, **React**
 * Discover the other actors dynamically registered in a remote registry
 * React on events sent by actors
 
-# Detailed features
+In a nutshell, gopera allows to:
 * Send messages from one actor to another using the **mailbox** principle.
 * An actor can be either **local** (triggered through a Go channel) or **remote** (triggered through an **AMQP broker**)
 * **Hierarchy** dependencies between the different actors
@@ -58,6 +58,72 @@ func main() {
 
 ```
 INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
+```
+
+# Features
+
+## Message forwarding
+
+```go
+//Create an actor
+actor := gopera.Actor{}
+//Configure it to react on someMessage
+actor.React("someMessage", func(message gopera.Message) {
+    //Forward the message to fooActor and barActor
+    message.Self.Forward(message, "fooActor", "barActor")
+})
+```
+
+## Stateful actor
+
+```go
+//Create a structure extending the standard gopera.Actor one
+type StatefulActor struct {
+	gopera.Actor
+	someValue int
+}
+
+//...
+
+//Create an actor
+actor := StatefulActor{}
+//Configure it to react on someMessage
+actor.React("someMessage", func(message gopera.Message) {
+    //Modify the actor internal state
+    if message.Data == 0 {
+        actor.someValue = 1
+    } else {
+        actor.someValue = 0
+    }
+})
+```
+
+## Become/unbecome
+
+```go
+//Bar behavior
+bar := func(message gopera.Message) {
+    if message.Data == "foo" {
+        //Unbecome to foo
+        message.Self.Unbecome(message.MessageType)
+    }
+}
+
+//Foo behavior
+foo := func(message gopera.Message) {
+    if message.Data == "bar" {
+        //Become bar
+        message.Self.Become(message.MessageType, bar)
+    }
+}
+
+//Create an actor
+actor := gopera.Actor{}
+//Configure it to react on someMessage
+actor.React("someMessage", foo)
+```
+
+```go
 ```
 
 # Contributing

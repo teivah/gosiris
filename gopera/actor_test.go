@@ -138,7 +138,7 @@ func TestBecomeUnbecome(t *testing.T) {
 	angry := func(message Message) {
 		if message.Data == "happy" {
 			message.Self.LogInfo("Unbecome\n")
-			message.Self.Unbecome(message.messageType)
+			message.Self.Unbecome(message.MessageType)
 		} else {
 			message.Self.LogInfo("Angrily receiving %v\n", message.Data)
 		}
@@ -147,7 +147,7 @@ func TestBecomeUnbecome(t *testing.T) {
 	happy := func(message Message) {
 		if message.Data == "angry" {
 			message.Self.LogInfo("I shall become angry\n")
-			message.Self.Become(message.messageType, angry)
+			message.Self.Become(message.MessageType, angry)
 		} else {
 			message.Self.LogInfo("Happily receiving %v\n", message.Data)
 		}

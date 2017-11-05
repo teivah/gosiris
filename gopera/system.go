@@ -241,7 +241,7 @@ func (system *actorSystem) Invoke(message Message) error {
 		return err
 	}
 
-	if message.messageType == GoperaMsgPoisonPill {
+	if message.MessageType == GoperaMsgPoisonPill {
 		InfoLogger.Printf("Actor %v has received a poison pill", actorAssociation.actor.Name())
 
 		if actorAssociation.options.Autoclose() {
@@ -251,7 +251,7 @@ func (system *actorSystem) Invoke(message Message) error {
 		}
 	}
 
-	f, exists := actorAssociation.actor.reactions()[message.messageType]
+	f, exists := actorAssociation.actor.reactions()[message.MessageType]
 	if exists {
 		f(message)
 	}
