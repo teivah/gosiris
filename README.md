@@ -155,4 +155,4 @@ fooRef.AskForClose(requesterRef)
 * Open an issue if you want a new feature or if you spotted a bug
 * Feel free to propose pull requests
 
-Any contribution is welcome!
+Any contribution is more than welcome! In the meantime, if we want to discuss about gopera you can contact me [@teivah](https://twitter.com/teivah).
