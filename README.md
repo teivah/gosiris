@@ -140,6 +140,16 @@ defer actor.Close()
 gopera.ActorSystem().RegisterActor("actor", actor, new(gopera.ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor"))
 ```
 
+## Request actor close
+
+```go
+//Retrieve the actor references
+requesterRef, _ := gopera.ActorSystem().ActorOf("requester")
+fooRef, _ := gopera.ActorSystem().ActorOf("foo")
+//Request to close foo from requester
+fooRef.AskForClose(requesterRef)
+```
+
 # Contributing
 
 * Open an issue if you want a new feature or if you spotted a bug
