@@ -2,13 +2,14 @@ gopera is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Go
 
 # Principles
 gopera is based on three principles: **Configure**, **Discover**, **React**
-* Configure the actor behaviour depending on event types
-* Discover the other actors dynamically registered in a remote registry
-* React on events sent by actors
+* Configure the actor behaviour depending on given event types
+* Discover the other actors automatically registered in a registry
+* React on events sent by other actors
 
-In a nutshell, gopera allows to:
-* Send messages from one actor to another using the **mailbox** principle.
-* An actor can be either **local** (triggered through a Go channel) or **remote** (triggered through an **AMQP broker**)
+# Features
+
+* Send messages from one actor to another using the **mailbox** principle
+* An actor can be either **local** (using a Go channel) or **remote** (**AMQP**)
 * **Hierarchy** dependencies between the different actors
 * **Forward** message to maintain the original sender
 * **Become/unbecome** capability to modify at runtime the behavior of an actor
@@ -60,13 +61,14 @@ func main() {
 INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 ```
 
-# Features
+# Examples
 
 ## Message forwarding
 
 ```go
 //Create an actor
 actor := gopera.Actor{}
+defer actor.Close()
 //Configure it to react on someMessage
 actor.React("someMessage", func(message gopera.Message) {
     //Forward the message to fooActor and barActor
@@ -87,6 +89,7 @@ type StatefulActor struct {
 
 //Create an actor
 actor := StatefulActor{}
+defer actor.Close()
 //Configure it to react on someMessage
 actor.React("someMessage", func(message gopera.Message) {
     //Modify the actor internal state
@@ -119,11 +122,22 @@ foo := func(message gopera.Message) {
 
 //Create an actor
 actor := gopera.Actor{}
+defer actor.Close()
 //Configure it to react on someMessage
 actor.React("someMessage", foo)
 ```
 
+## Remote AMQP actor
+
 ```go
+//Create an actor
+actor := new(gopera.Actor).React("reply", func(message gopera.Message) {
+    message.Self.LogInfo("Received %v", message.Data)
+})
+defer actor.Close()
+
+//Register a remote actor listening onto a specific AMQP queue
+gopera.ActorSystem().RegisterActor("actor", actor, new(gopera.ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor"))
 ```
 
 # Contributing
