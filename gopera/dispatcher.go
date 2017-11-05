@@ -104,7 +104,7 @@ func receive(actor actorInterface, options OptionsInterface) {
 			}
 		}()
 
-		c := actor.Mailbox()
+		c := actor.getDataChan()
 		for {
 			select {
 			//TODO To be improved. If the channel is closed it will trigger the recover function

@@ -115,7 +115,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	actor.setParent(parent)
 	options.setParent(parent.Name())
 	if !options.Remote() {
-		actor.setMailbox(make(chan Message, options.BufferSize()))
+		actor.setDataChan(make(chan Message, options.BufferSize()))
 	} else {
 		registry.RegisterActor(name, options)
 		go registry.Watch(system.onActorCreatedFromRegistry, system.onActorRemovedFromRegistry)
@@ -192,7 +192,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 		}
 	}
 
-	m := v.actor.Mailbox()
+	m := v.actor.getDataChan()
 	if m != nil {
 		close(m)
 	}

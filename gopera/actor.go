@@ -7,7 +7,7 @@ func RootActor() *Actor {
 type Actor struct {
 	name     string
 	conf     map[string]func(Message)
-	mailbox  chan Message
+	dataChan chan Message
 	parent   actorInterface
 	unbecome map[string]func(Message)
 }
@@ -20,8 +20,8 @@ type actorInterface interface {
 	React(string, func(Message)) *Actor
 	reactions() map[string]func(Message)
 	unbecomeHistory() map[string]func(Message)
-	Mailbox() chan Message
-	setMailbox(chan Message)
+	getDataChan() chan Message
+	setDataChan(chan Message)
 	setName(string)
 	setParent(actorInterface)
 	Parent() ActorRefInterface
@@ -56,12 +56,12 @@ func (actor *Actor) unbecomeHistory() map[string]func(Message) {
 	return actor.unbecome
 }
 
-func (actor *Actor) Mailbox() chan Message {
-	return actor.mailbox
+func (actor *Actor) getDataChan() chan Message {
+	return actor.dataChan
 }
 
-func (actor *Actor) setMailbox(mailbox chan Message) {
-	actor.mailbox = mailbox
+func (actor *Actor) setDataChan(dataChan chan Message) {
+	actor.dataChan = dataChan
 }
 
 func (actor *Actor) setName(name string) {

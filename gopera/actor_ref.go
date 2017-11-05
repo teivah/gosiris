@@ -46,7 +46,7 @@ func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefIn
 		return err
 	}
 
-	dispatch(actor.actor.Mailbox(), messageType, data, &ref, sender, actor.options)
+	dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options)
 
 	return nil
 }
@@ -61,7 +61,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 		return
 	}
 
-	dispatch(actor.actor.Mailbox(), GoperaMsgPoisonPill, nil, &ref, sender, actor.options)
+	dispatch(actor.actor.getDataChan(), GoperaMsgPoisonPill, nil, &ref, sender, actor.options)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {
