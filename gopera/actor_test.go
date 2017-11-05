@@ -283,7 +283,7 @@ func TestChildClosedNotificationRemote(t *testing.T) {
 
 	actorChild := new(Actor)
 	actorChild.React("do", func(message Message) {
-		if message.Data == 0 {
+		if message.Data == "0" {
 			message.Self.LogInfo("I feel like being closed")
 			actorChild.Close()
 		} else {

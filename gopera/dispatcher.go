@@ -12,10 +12,10 @@ func init() {
 const (
 	GoperaMsgPoisonPill  = "GoperaPoisonPill"
 	GoperaMsgChildClosed = "GoperaChildClosed"
-	json_messageType     = "messageType"
-	json_data            = "data"
-	json_sender          = "sender"
-	json_self            = "self"
+	jsonMessageType      = "messageType"
+	jsonData             = "data"
+	jsonSender           = "sender"
+	jsonSelf             = "self"
 )
 
 type Message struct {
@@ -27,10 +27,10 @@ type Message struct {
 
 func (message Message) MarshalJSON() ([]byte, error) {
 	m := make(map[string]string)
-	m[json_messageType] = message.messageType
-	m[json_data] = fmt.Sprint(message.Data)
-	m[json_sender] = message.Sender.Name()
-	m[json_self] = message.Self.Name()
+	m[jsonMessageType] = message.messageType
+	m[jsonData] = fmt.Sprint(message.Data)
+	m[jsonSender] = message.Sender.Name()
+	m[jsonSelf] = message.Self.Name()
 	return json.Marshal(m)
 }
 
@@ -42,18 +42,18 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	message.messageType = m[json_messageType]
+	message.messageType = m[jsonMessageType]
 
-	message.Data = m[json_data]
+	message.Data = m[jsonData]
 
-	self := m[json_self]
+	self := m[jsonSelf]
 	selfAssociation, err := ActorSystem().actor(self)
 	if err != nil {
 		return err
 	}
 	message.Self = selfAssociation.actorRef
 
-	sender := m[json_sender]
+	sender := m[jsonSender]
 	senderAssociation, err := ActorSystem().actor(sender)
 	if err != nil {
 		return err
