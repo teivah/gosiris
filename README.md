@@ -140,14 +140,34 @@ defer actor.Close()
 gopera.ActorSystem().RegisterActor("actor", actor, new(gopera.ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor"))
 ```
 
-## Request actor close
+## Request an actor to be closed
 
 ```go
+//Create an actor
+actor := new(gopera.Actor)
+defer actor.Close()
+
+//Create foo actor and register it with Autoclose set to false
+foo := new(gopera.Actor)
+defer foo.Close()
+//Implement a specific logic if a poison pill is received
+foo.React(gopera.GoperaMsgPoisonPill, func(message gopera.Message) {
+    //Do something
+})
+gopera.ActorSystem().RegisterActor("foo", foo, new(gopera.ActorOptions).SetAutoclose(false))
+
+//Create foo actor and register it with Autoclose set to true
+bar := new(gopera.Actor)
+defer bar.Close()
+gopera.ActorSystem().RegisterActor("bar", bar, new(gopera.ActorOptions).SetAutoclose(true))
+
 //Retrieve the actor references
-requesterRef, _ := gopera.ActorSystem().ActorOf("requester")
+actorRef, _ := gopera.ActorSystem().ActorOf("actor")
 fooRef, _ := gopera.ActorSystem().ActorOf("foo")
-//Request to close foo from requester
-fooRef.AskForClose(requesterRef)
+barRef, _ := gopera.ActorSystem().ActorOf("bar")
+//Request to close foo from requester by sending a poison pill
+fooRef.AskForClose(actorRef)
+barRef.AskForClose(actorRef)
 ```
 
 # Contributing
