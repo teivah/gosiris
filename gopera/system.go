@@ -6,30 +6,45 @@ import (
 
 var root *Actor
 var actorSystemInstance actorSystem
+var actorSystemStarted bool
 var registry registryInterface
 
 func init() {
 	root = &Actor{}
 	root.name = "root"
+	actorSystemStarted = false
 }
 
-func InitLocalActorSystem() {
+func InitLocalActorSystem() error {
+	if actorSystemStarted {
+		ErrorLogger.Printf("Actor system already started")
+		return fmt.Errorf("actor system already started")
+	}
+
 	actorSystemInstance = actorSystem{}
 	actorSystemInstance.actors = make(map[string]actorAssociation)
+	actorSystemStarted = true
+
+	return nil
 }
 
 func InitDistributedActorSystem(url ...string) error {
-	InitLocalActorSystem()
+	e := InitLocalActorSystem()
+	if e != nil {
+		return e
+	}
 
 	//TODO Manage the implementation dynamically
 	registry = &etcdClient{}
 	err := registry.Configure(url...)
 	if err != nil {
+		actorSystemStarted = false
 		FatalLogger.Fatalf("Failed to configure access to the remote repository: %v", err)
 	}
 
 	conf, err := registry.ParseConfiguration()
 	if err != nil {
+		actorSystemStarted = false
 		FatalLogger.Fatalf("Failed to parse the configuration: %v", err)
 	}
 
@@ -43,11 +58,20 @@ func ActorSystem() *actorSystem {
 	return &actorSystemInstance
 }
 
-func CloseActorSystem() {
+func CloseActorSystem() error {
+	if !actorSystemStarted {
+		ErrorLogger.Printf("Actor system not started")
+		return fmt.Errorf("actor system not started")
+	}
+
 	if registry != nil {
 		registry.Close()
 	}
 	InfoLogger.Printf("Actor system closed")
+
+	actorSystemStarted = false
+
+	return nil
 }
 
 type actorAssociation struct {
@@ -151,7 +175,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 		ErrorLogger.Printf("Unable to close actor %v", name)
 		return
 	}
-	
+
 	//If the actor has a parent we send him a message
 	if v.actor.Parent() != nil {
 		parentName := v.actor.Parent().Name()
