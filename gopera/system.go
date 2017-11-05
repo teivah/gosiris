@@ -107,11 +107,15 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 		options.SetRemote(false)
 	}
 
+	if options.BufferSize() == 0 {
+		options.SetBufferSize(defaultBufferSize)
+	}
+
 	actor.setName(name)
 	actor.setParent(parent)
 	options.setParent(parent.Name())
 	if !options.Remote() {
-		actor.setMailbox(make(chan Message))
+		actor.setMailbox(make(chan Message, options.BufferSize()))
 	} else {
 		registry.RegisterActor(name, options)
 		go registry.Watch(system.onActorCreatedFromRegistry, system.onActorRemovedFromRegistry)

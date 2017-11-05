@@ -1,12 +1,17 @@
 package gopera
 
+const (
+	defaultBufferSize = 64
+)
+
 type ActorOptions struct {
 	parent      string
 	remote      bool //Default: false
-	autoclose   bool //Default: true
+	autoclose   bool //Default: false
 	remoteType  string
 	url         string
 	destination string
+	bufferSize  int //Default: 64
 }
 
 type OptionsInterface interface {
@@ -22,6 +27,8 @@ type OptionsInterface interface {
 	Destination() string
 	setParent(string)
 	Parent() string
+	SetBufferSize(int)
+	BufferSize() int
 }
 
 func (options *ActorOptions) SetRemote(b bool) OptionsInterface {
@@ -75,4 +82,12 @@ func (options *ActorOptions) setParent(s string) {
 
 func (options *ActorOptions) Parent() string {
 	return options.parent
+}
+
+func (options *ActorOptions) SetBufferSize(i int) {
+	options.bufferSize = i
+}
+
+func (options *ActorOptions) BufferSize() int {
+	return options.bufferSize
 }
