@@ -3,6 +3,7 @@ package gopera
 import (
 	"fmt"
 	"log"
+	"time"
 )
 
 type ActorRef struct {
@@ -13,6 +14,7 @@ type ActorRef struct {
 
 type ActorRefInterface interface {
 	Tell(string, interface{}, ActorRefInterface) error
+	Repeat(string, time.Duration, interface{}, ActorRefInterface) (chan struct{}, error)
 	AskForClose(ActorRefInterface)
 	LogInfo(string, ...interface{})
 	LogError(string, ...interface{})
@@ -49,6 +51,34 @@ func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefIn
 	dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options)
 
 	return nil
+}
+
+func (ref ActorRef) Repeat(messageType string, d time.Duration, data interface{}, sender ActorRefInterface) (chan struct{}, error) {
+	actor, err := ActorSystem().actor(ref.name)
+
+	if err != nil {
+		ErrorLogger.Printf("Failed to send from %v to %v: %v", sender.Name(), ref.name, err)
+		return nil, err
+	}
+
+	t := time.NewTicker(d)
+	stop := make(chan struct{})
+
+	go
+		func(t *time.Ticker, stop chan struct{}) {
+			for {
+				select {
+				case <-t.C:
+					dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options)
+				case <-stop:
+					t.Stop()
+					close(stop)
+					return
+				}
+			}
+		}(t, stop)
+
+	return stop, nil
 }
 
 func (ref ActorRef) AskForClose(sender ActorRefInterface) {

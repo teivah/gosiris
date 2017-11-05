@@ -302,3 +302,32 @@ func TestChildClosedNotificationRemote(t *testing.T) {
 
 	time.Sleep(1000 * time.Millisecond)
 }
+
+func TestRepeat(t *testing.T) {
+	InitLocalActorSystem()
+	defer CloseActorSystem()
+
+	parentActor := Actor{}
+	defer parentActor.Close()
+
+	ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+
+	childActor := Actor{}
+	defer childActor.Close()
+
+	childActor.React("message", func(message Message) {
+		message.Self.LogInfo("Received %v\n", message.Data)
+	})
+
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
+
+	parentActorRef, _ := ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := ActorSystem().ActorOf("childActor")
+
+	c, _ := childActorRef.Repeat("message", 5*time.Millisecond, "Hi! How are you?", parentActorRef)
+
+	time.Sleep(21 * time.Millisecond)
+
+	ActorSystem().Stop(c)
+
+}

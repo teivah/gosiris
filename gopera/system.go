@@ -266,3 +266,9 @@ func (system *actorSystem) Invoke(message Message) error {
 
 	return nil
 }
+
+func (system *actorSystem) Stop(stop chan struct{}) {
+	if stop != nil {
+		stop <- struct{}{}
+	}
+}
