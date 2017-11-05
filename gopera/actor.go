@@ -5,11 +5,12 @@ func RootActor() *Actor {
 }
 
 type Actor struct {
-	name     string
-	conf     map[string]func(Message)
-	dataChan chan Message
-	parent   actorInterface
-	unbecome map[string]func(Message)
+	name      string
+	conf      map[string]func(Message)
+	dataChan  chan Message
+	closeChan chan int
+	parent    actorInterface
+	unbecome  map[string]func(Message)
 }
 
 type RemoteActor struct {
@@ -22,6 +23,8 @@ type actorInterface interface {
 	unbecomeHistory() map[string]func(Message)
 	getDataChan() chan Message
 	setDataChan(chan Message)
+	getCloseChan() chan int
+	setCloseChan(chan int)
 	setName(string)
 	setParent(actorInterface)
 	Parent() ActorRefInterface
@@ -62,6 +65,14 @@ func (actor *Actor) getDataChan() chan Message {
 
 func (actor *Actor) setDataChan(dataChan chan Message) {
 	actor.dataChan = dataChan
+}
+
+func (actor *Actor) getCloseChan() chan int {
+	return actor.closeChan
+}
+
+func (actor *Actor) setCloseChan(closeChan chan int) {
+	actor.closeChan = closeChan
 }
 
 func (actor *Actor) setName(name string) {

@@ -104,12 +104,17 @@ func receive(actor actorInterface, options OptionsInterface) {
 			}
 		}()
 
-		c := actor.getDataChan()
+		dataChan := actor.getDataChan()
+		closeChan := actor.getCloseChan()
 		for {
 			select {
-			//TODO To be improved. If the channel is closed it will trigger the recover function
-			case p := <-c:
+			case p := <-dataChan:
 				ActorSystem().Invoke(p)
+			case <-closeChan:
+				InfoLogger.Printf("Closing %v receiver", actor.Name())
+				close(dataChan)
+				close(closeChan)
+				return
 			}
 		}
 	} else {

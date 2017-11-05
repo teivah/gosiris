@@ -238,6 +238,10 @@ func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {
 }
 
 func (system *actorSystem) Invoke(message Message) error {
+	if message.Self == nil {
+		return nil
+	}
+
 	actorAssociation, err := system.actor(message.Self.Name())
 
 	if err != nil {
