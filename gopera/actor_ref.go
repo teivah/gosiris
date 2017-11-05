@@ -19,6 +19,7 @@ type ActorRefInterface interface {
 	Become(string, func(Message)) error
 	Unbecome(string) error
 	Name() string
+	Forward(Message, ...string)
 }
 
 func newActorRef(name string) ActorRefInterface {
@@ -109,4 +110,14 @@ func (ref ActorRef) Unbecome(messageType string) error {
 
 func (ref ActorRef) Name() string {
 	return ref.name
+}
+
+func (ref ActorRef) Forward(message Message, destinations ...string) {
+	for _, v := range destinations {
+		actorRef, err := ActorSystem().ActorOf(v)
+		if err != nil {
+			fmt.Errorf("actor %v is not part of the actor system", v)
+		}
+		actorRef.Tell(message.messageType, message.Data, message.Sender)
+	}
 }

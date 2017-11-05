@@ -106,7 +106,7 @@ func TestForward(t *testing.T) {
 	defer forwarderActor.Close()
 	forwarderActor.React("message", func(message Message) {
 		message.Self.LogInfo("Received %v\n", message.Data)
-		forwarderActor.Forward(message, "childActor1", "childActor2")
+		message.Self.Forward(message, "childActor1", "childActor2")
 	})
 	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor, nil)
 
