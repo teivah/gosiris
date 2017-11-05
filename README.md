@@ -15,6 +15,7 @@ gopera is based on three principles: **Configure**, **Discover**, **React**
 * **Become/unbecome** capability to modify at runtime the behavior of an actor
 * Capacity to gracefully ask an actor to **stop** its execution
 * Automatic registration and **discoverability** of the actors using a registry (**etcd**)
+* **Scheduler** capabilities
 
 # Hello world
 
