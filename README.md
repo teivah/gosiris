@@ -6,16 +6,16 @@ gopera is based on three principles: **Configure**, **Discover**, **React**
 * Discover the other actors automatically registered in a registry
 * React on events sent by other actors
 
-# Features
+# Main features
 
-* Send messages from one actor to another using the **mailbox** principle
-* An actor can be either **local** (using a Go channel) or **remote** (**AMQP**)
-* **Hierarchy** dependencies between the different actors
-* **Forward** message to maintain the original sender
-* **Become/unbecome** capability to modify at runtime the behavior of an actor
-* Capacity to gracefully ask an actor to **stop** its execution
-* Automatic registration and **discoverability** of the actors using a registry (**etcd**)
-* **Scheduler** capabilities
+The main features are the following:
+* Manage a hierarchy of actors
+* Each actor can be either local or distributed (AMQP broker)
+* Send, Forward and Repeat messages between actors
+* Become/Unbecome capability to modify an actor behavior at runtime
+* Automatic registration and discovery of the actors (etcd registry)
+
+You should check the following examples for more details
 
 # Hello world
 
@@ -169,6 +169,21 @@ barRef, _ := gopera.ActorSystem().ActorOf("bar")
 //Request to close foo from requester by sending a poison pill
 fooRef.AskForClose(actorRef)
 barRef.AskForClose(actorRef)
+```
+
+## Repeat
+```go
+//Retrieve the actor references
+fooRef, _ := gopera.ActorSystem().ActorOf("fooActor")
+barRef, _ := gopera.ActorSystem().ActorOf("barActor")
+
+//Repeat a message every 5 ms
+c, _ := fooRef.Repeat("message", 5*time.Millisecond, "Hi! How are you?", barRef)
+
+time.Sleep(21 * time.Millisecond)
+
+//Ask the actor system to stop the repeated message
+gopera.ActorSystem().Stop(c)
 ```
 
 # Contributing
