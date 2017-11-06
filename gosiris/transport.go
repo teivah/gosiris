@@ -5,6 +5,11 @@ import (
 )
 
 var remoteConnections map[string]TransportInterface
+var transportTypes map[string]func() TransportInterface
+
+func init() {
+	transportTypes = make(map[string]func() TransportInterface)
+}
 
 type TransportInterface interface {
 	Configure(string, map[string]string)
@@ -14,18 +19,19 @@ type TransportInterface interface {
 	Close()
 }
 
+func registerTransport(name string, f func() TransportInterface) {
+	transportTypes[name] = f
+}
+
+func newTransport(name string) TransportInterface {
+	return transportTypes[name]()
+}
+
 func InitRemoteConnections(configuration map[string]OptionsInterface) {
 	remoteConnections = make(map[string]TransportInterface)
 
-	//TODO Dynamic
 	for k, v := range configuration {
-		var c TransportInterface
-
-		if v.RemoteType() == Amqp {
-			c = &amqpTransport{}
-		} else if v.RemoteType() == Kafka {
-			c = &kafkaTransport{}
-		}
+		c := transportTypes[v.RemoteType()]()
 
 		c.Configure(v.Url(), nil)
 		err := c.Connection()
@@ -39,14 +45,8 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 }
 
 func AddConnection(name string, conf OptionsInterface) {
-	var c TransportInterface
+	c := transportTypes[conf.RemoteType()]()
 
-	//TODO Dynamic
-	if conf.RemoteType() == Amqp {
-		c = &amqpTransport{}
-	} else if conf.RemoteType() == Kafka {
-		c = &kafkaTransport{}
-	}
 	c.Configure(conf.Url(), nil)
 	err := c.Connection()
 	if err != nil {

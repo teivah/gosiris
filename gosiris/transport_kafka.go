@@ -10,6 +10,14 @@ import (
 
 var Kafka = "kafka"
 
+func init() {
+	registerTransport(Kafka, newKafkaTransport)
+}
+
+func newKafkaTransport() TransportInterface {
+	return new(kafkaTransport)
+}
+
 type kafkaTransport struct {
 	url      string
 	producer sarama.AsyncProducer

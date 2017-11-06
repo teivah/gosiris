@@ -13,6 +13,14 @@ type amqpTransport struct {
 	channel    *amqp.Channel
 }
 
+func init() {
+	registerTransport(Amqp, newAmqpTransport)
+}
+
+func newAmqpTransport() TransportInterface {
+	return new(amqpTransport)
+}
+
 func (a *amqpTransport) Configure(url string, options map[string]string) {
 	a.url = url
 }
@@ -63,7 +71,7 @@ func (a *amqpTransport) Receive(queueName string) {
 	for d := range msgs {
 		msg := Message{}
 		json.Unmarshal(d.Body, &msg)
-
+		InfoLogger.Printf("New AMQP message received: %v", msg)
 		ActorSystem().Invoke(msg)
 	}
 }
@@ -74,8 +82,7 @@ func (a *amqpTransport) Close() {
 }
 
 func (a *amqpTransport) Send(destination string, data []byte) error {
-	json := string(data)
-	InfoLogger.Printf("Sending %v", json)
+	InfoLogger.Printf("Sending message to the AMQP destination %v", destination)
 
 	q, err := a.channel.QueueDeclare(
 		destination, // name
