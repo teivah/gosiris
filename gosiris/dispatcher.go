@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"encoding/json"
@@ -10,14 +10,14 @@ func init() {
 }
 
 const (
-	GoperaMsgPoisonPill       = "goperaPoisonPill"
-	GoperaMsgChildClosed      = "goperaChildClosed"
-	GoperaMsgHeartbeatRequest = "goperaHeartbeatRequest"
-	GoperaMsgHeartbeatReply   = "goperaHeartbeatReply"
-	jsonMessageType           = "messageType"
-	jsonData                  = "data"
-	jsonSender                = "sender"
-	jsonSelf                  = "self"
+	GosirisMsgPoisonPill       = "gosirisPoisonPill"
+	GosirisMsgChildClosed      = "gosirisChildClosed"
+	GosirisMsgHeartbeatRequest = "gosirisHeartbeatRequest"
+	GosirisMsgHeartbeatReply   = "gosirisHeartbeatReply"
+	jsonMessageType            = "messageType"
+	jsonData                   = "data"
+	jsonSender                 = "sender"
+	jsonSelf                   = "self"
 )
 
 type Message struct {

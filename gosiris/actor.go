@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 func RootActor() *Actor {
 	return root

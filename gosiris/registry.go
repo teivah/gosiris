@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 type registryInterface interface {
 	Configure(...string) error

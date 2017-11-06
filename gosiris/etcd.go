@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"github.com/coreos/etcd/client"
@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	actors_configuration = "/gopera/actor/"
-	prefix               = "gofast://"
+	actors_configuration = "/gosiris/actor/"
+	prefix               = "gosiris://"
 	delimiter            = "#"
 	action_delete        = "delete"
 	action_set           = "set"

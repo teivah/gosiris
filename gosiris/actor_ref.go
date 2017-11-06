@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"fmt"
@@ -91,7 +91,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 		return
 	}
 
-	dispatch(actor.actor.getDataChan(), GoperaMsgPoisonPill, nil, &ref, sender, actor.options)
+	dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {

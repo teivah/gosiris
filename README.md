@@ -1,7 +1,7 @@
-gopera is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Golang.
+gosiris is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Golang.
 
 # Principles
-gopera is based on three principles: **Configure**, **Discover**, **React**
+gosiris is based on three principles: **Configure**, **Discover**, **React**
 * Configure the actor behaviour depending on given event types
 * Discover the other actors automatically registered in a registry
 * React on events sent by other actors
@@ -23,35 +23,35 @@ You should check the following examples for more details
 package main
 
 import (
-	"github.com/teivah/gopera/gopera"
+	"github.com/teivah/gosiris/gosiris"
 )
 
 func main() {
 	//Init a local actor system
-	gopera.InitLocalActorSystem()
+	gosiris.InitLocalActorSystem()
 
 	//Create an actor
-	parentActor := gopera.Actor{}
+	parentActor := gosiris.Actor{}
 	//Close an actor
 	defer parentActor.Close()
 
 	//Create an actor
-	childActor := gopera.Actor{}
+	childActor := gosiris.Actor{}
 	//Close an actor
 	defer childActor.Close()
 	//Register a reaction to event types ("message" in this case)
-	childActor.React("message", func(message gopera.Message) {
+	childActor.React("message", func(message gosiris.Message) {
 		message.Self.LogInfo("Received %v\n", message.Data)
 	})
 
 	//Register an actor to the system
-	gopera.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+	gosiris.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
 	//Register an actor by spawning it
-	gopera.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
+	gosiris.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
 	//Retrieve actor references
-	parentActorRef, _ := gopera.ActorSystem().ActorOf("parentActor")
-	childActorRef, _ := gopera.ActorSystem().ActorOf("childActor")
+	parentActorRef, _ := gosiris.ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := gosiris.ActorSystem().ActorOf("childActor")
 
 	//Send a message from one actor to another (from parentActor to childActor)
 	childActorRef.Send("message", "Hi! How are you?", parentActorRef)
@@ -68,10 +68,10 @@ INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 
 ```go
 //Create an actor
-actor := gopera.Actor{}
+actor := gosiris.Actor{}
 defer actor.Close()
 //Configure it to react on someMessage
-actor.React("someMessage", func(message gopera.Message) {
+actor.React("someMessage", func(message gosiris.Message) {
     //Forward the message to fooActor and barActor
     message.Self.Forward(message, "fooActor", "barActor")
 })
@@ -80,9 +80,9 @@ actor.React("someMessage", func(message gopera.Message) {
 ## Stateful actor
 
 ```go
-//Create a structure extending the standard gopera.Actor one
+//Create a structure extending the standard gosiris.Actor one
 type StatefulActor struct {
-	gopera.Actor
+	gosiris.Actor
 	someValue int
 }
 
@@ -92,7 +92,7 @@ type StatefulActor struct {
 actor := StatefulActor{}
 defer actor.Close()
 //Configure it to react on someMessage
-actor.React("someMessage", func(message gopera.Message) {
+actor.React("someMessage", func(message gosiris.Message) {
     //Modify the actor internal state
     if message.Data == 0 {
         actor.someValue = 1
@@ -106,7 +106,7 @@ actor.React("someMessage", func(message gopera.Message) {
 
 ```go
 //Bar behavior
-bar := func(message gopera.Message) {
+bar := func(message gosiris.Message) {
     if message.Data == "foo" {
         //Unbecome to foo
         message.Self.Unbecome(message.MessageType)
@@ -114,7 +114,7 @@ bar := func(message gopera.Message) {
 }
 
 //Foo behavior
-foo := func(message gopera.Message) {
+foo := func(message gosiris.Message) {
     if message.Data == "bar" {
         //Become bar
         message.Self.Become(message.MessageType, bar)
@@ -122,7 +122,7 @@ foo := func(message gopera.Message) {
 }
 
 //Create an actor
-actor := gopera.Actor{}
+actor := gosiris.Actor{}
 defer actor.Close()
 //Configure it to react on someMessage
 actor.React("someMessage", foo)
@@ -132,40 +132,40 @@ actor.React("someMessage", foo)
 
 ```go
 //Create an actor
-actor := new(gopera.Actor).React("reply", func(message gopera.Message) {
+actor := new(gosiris.Actor).React("reply", func(message gosiris.Message) {
     message.Self.LogInfo("Received %v", message.Data)
 })
 defer actor.Close()
 
 //Register a remote actor listening onto a specific AMQP queue
-gopera.ActorSystem().RegisterActor("actor", actor, new(gopera.ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor"))
+gosiris.ActorSystem().RegisterActor("actor", actor, new(gosiris.ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor"))
 ```
 
 ## Request an actor to be closed
 
 ```go
 //Create an actor
-actor := new(gopera.Actor)
+actor := new(gosiris.Actor)
 defer actor.Close()
 
 //Create foo actor and register it with Autoclose set to false
-foo := new(gopera.Actor)
+foo := new(gosiris.Actor)
 defer foo.Close()
 //Implement a specific logic if a poison pill is received
-foo.React(gopera.GoperaMsgPoisonPill, func(message gopera.Message) {
+foo.React(gosiris.GosirisMsgPoisonPill, func(message gosiris.Message) {
     //Do something
 })
-gopera.ActorSystem().RegisterActor("foo", foo, new(gopera.ActorOptions).SetAutoclose(false))
+gosiris.ActorSystem().RegisterActor("foo", foo, new(gosiris.ActorOptions).SetAutoclose(false))
 
 //Create foo actor and register it with Autoclose set to true
-bar := new(gopera.Actor)
+bar := new(gosiris.Actor)
 defer bar.Close()
-gopera.ActorSystem().RegisterActor("bar", bar, new(gopera.ActorOptions).SetAutoclose(true))
+gosiris.ActorSystem().RegisterActor("bar", bar, new(gosiris.ActorOptions).SetAutoclose(true))
 
 //Retrieve the actor references
-actorRef, _ := gopera.ActorSystem().ActorOf("actor")
-fooRef, _ := gopera.ActorSystem().ActorOf("foo")
-barRef, _ := gopera.ActorSystem().ActorOf("bar")
+actorRef, _ := gosiris.ActorSystem().ActorOf("actor")
+fooRef, _ := gosiris.ActorSystem().ActorOf("foo")
+barRef, _ := gosiris.ActorSystem().ActorOf("bar")
 //Request to close foo from requester by sending a poison pill
 fooRef.AskForClose(actorRef)
 barRef.AskForClose(actorRef)
@@ -174,8 +174,8 @@ barRef.AskForClose(actorRef)
 ## Repeat
 ```go
 //Retrieve the actor references
-fooRef, _ := gopera.ActorSystem().ActorOf("fooActor")
-barRef, _ := gopera.ActorSystem().ActorOf("barActor")
+fooRef, _ := gosiris.ActorSystem().ActorOf("fooActor")
+barRef, _ := gosiris.ActorSystem().ActorOf("barActor")
 
 //Repeat a message every 5 ms
 c, _ := fooRef.Repeat("message", 5*time.Millisecond, "Hi! How are you?", barRef)
@@ -183,7 +183,7 @@ c, _ := fooRef.Repeat("message", 5*time.Millisecond, "Hi! How are you?", barRef)
 time.Sleep(21 * time.Millisecond)
 
 //Ask the actor system to stop the repeated message
-gopera.ActorSystem().Stop(c)
+gosiris.ActorSystem().Stop(c)
 ```
 
 # Contributing
@@ -191,4 +191,4 @@ gopera.ActorSystem().Stop(c)
 * Open an issue if you want a new feature or if you spotted a bug
 * Feel free to propose pull requests
 
-Any contribution is more than welcome! In the meantime, if we want to discuss about gopera you can contact me [@teivah](https://twitter.com/teivah).
+Any contribution is more than welcome! In the meantime, if we want to discuss about gosiris you can contact me [@teivah](https://twitter.com/teivah).

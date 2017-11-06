@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"github.com/streadway/amqp"

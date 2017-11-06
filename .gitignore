@@ -36,7 +36,7 @@ Gopkg.lock
 .idea/modules.xml
 .idea/saveactions_settings.xml
 .idea/vcs.xml
-.idea/gopera.iml
+.idea/gosiris.iml
 
 # User-specific stuff:
 .idea/**/workspace.xml

@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"testing"
@@ -228,7 +228,7 @@ func TestAutocloseFalse(t *testing.T) {
 	defer CloseActorSystem()
 
 	actorY := new(Actor)
-	actorY.React(GoperaMsgPoisonPill, func(message Message) {
+	actorY.React(GosirisMsgPoisonPill, func(message Message) {
 		message.Self.LogInfo("Received a poison pill, closing.")
 		actorY.Close()
 	})
@@ -245,7 +245,7 @@ func TestChildClosedNotificationLocal(t *testing.T) {
 
 	actorParent := new(Actor)
 	defer actorParent.Close()
-	actorParent.React(GoperaMsgChildClosed, func(message Message) {
+	actorParent.React(GosirisMsgChildClosed, func(message Message) {
 		message.Self.LogInfo("My child is closed")
 	})
 
@@ -277,7 +277,7 @@ func TestChildClosedNotificationRemote(t *testing.T) {
 
 	actorParent := new(Actor)
 	defer actorParent.Close()
-	actorParent.React(GoperaMsgChildClosed, func(message Message) {
+	actorParent.React(GosirisMsgChildClosed, func(message Message) {
 		message.Self.LogInfo("My child is closed")
 	})
 

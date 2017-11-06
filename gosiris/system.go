@@ -1,4 +1,4 @@
-package gopera
+package gosiris
 
 import (
 	"fmt"
@@ -141,7 +141,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 					if err != nil {
 						ErrorLogger.Printf("Parent of actor %v not found", name)
 					}
-					dispatch(p.actor.getDataChan(), GoperaMsgHeartbeatRequest, nil, actorRef, p.actorRef, new(ActorOptions))
+					dispatch(p.actor.getDataChan(), GosirisMsgHeartbeatRequest, nil, actorRef, p.actorRef, new(ActorOptions))
 				}
 			}
 		}(t, actorRef)
@@ -206,7 +206,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 			if err != nil {
 				ErrorLogger.Printf("Parent %v not registered", parentName)
 			}
-			p.actorRef.Tell(GoperaMsgChildClosed, name, v.actorRef)
+			p.actorRef.Tell(GosirisMsgChildClosed, name, v.actorRef)
 		}
 	}
 
@@ -267,7 +267,7 @@ func (system *actorSystem) Invoke(message Message) error {
 		return err
 	}
 
-	if message.MessageType == GoperaMsgPoisonPill {
+	if message.MessageType == GosirisMsgPoisonPill {
 		InfoLogger.Printf("Actor %v has received a poison pill", actorAssociation.actor.Name())
 
 		if actorAssociation.options.Autoclose() {
@@ -275,10 +275,10 @@ func (system *actorSystem) Invoke(message Message) error {
 			actorAssociation.actor.Close()
 			return nil
 		}
-	} else if message.MessageType == GoperaMsgHeartbeatRequest {
+	} else if message.MessageType == GosirisMsgHeartbeatRequest {
 		InfoLogger.Printf("Actor %v has received a heartbeat request", actorAssociation.actor.Name())
 
-		message.Sender.Tell(GoperaMsgHeartbeatReply, nil, message.Self)
+		message.Sender.Tell(GosirisMsgHeartbeatReply, nil, message.Self)
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.MessageType]
