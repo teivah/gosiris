@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 )
 
-type AmqpConnection struct {
+var Amqp = "amqp"
+
+type amqpTransport struct {
 	url        string
 	connection *amqp.Connection
 	channel    *amqp.Channel
 }
 
-func (amqpConnection *AmqpConnection) Configure(url string, options map[string] string) {
+func (amqpConnection *amqpTransport) Configure(url string, options map[string]string) {
 	amqpConnection.url = url
 }
 
-func (amqpConnection *AmqpConnection) Connection() error {
+func (amqpConnection *amqpTransport) Connection() error {
 	c, err := amqp.Dial(amqpConnection.url)
 	if err != nil {
 		ErrorLogger.Printf("Failed to connect to the AMQP server %v", amqpConnection.url)
@@ -35,7 +37,7 @@ func (amqpConnection *AmqpConnection) Connection() error {
 	return nil
 }
 
-func (amqpConnection *AmqpConnection) Receive(queueName string) {
+func (amqpConnection *amqpTransport) Receive(queueName string) {
 	q, err := amqpConnection.channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
@@ -66,12 +68,12 @@ func (amqpConnection *AmqpConnection) Receive(queueName string) {
 	}
 }
 
-func (amqpConnection *AmqpConnection) Close() {
+func (amqpConnection *amqpTransport) Close() {
 	amqpConnection.channel.Close()
 	amqpConnection.connection.Close()
 }
 
-func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
+func (amqpConnection *amqpTransport) Send(destination string, data []byte) error {
 	json := string(data)
 	InfoLogger.Printf("Sending %v", json)
 
@@ -85,6 +87,7 @@ func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 	)
 	if err != nil {
 		ErrorLogger.Printf("Error while declaring queue %v: %v", destination, err)
+		return err
 	}
 
 	body := data
@@ -100,5 +103,8 @@ func (amqpConnection *AmqpConnection) Send(destination string, data []byte) {
 
 	if err != nil {
 		ErrorLogger.Printf("Error while publishing a message to queue %v: %v", destination, err)
+		return err
 	}
+
+	return nil
 }

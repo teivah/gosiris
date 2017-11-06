@@ -260,6 +260,8 @@ func (system *actorSystem) Invoke(message Message) error {
 		return nil
 	}
 
+	InfoLogger.Printf("Invoking %v", message)
+
 	actorAssociation, err := system.actor(message.Self.Name())
 
 	if err != nil {

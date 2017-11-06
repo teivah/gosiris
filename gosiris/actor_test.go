@@ -172,7 +172,7 @@ func TestBecomeUnbecome(t *testing.T) {
 	childActorRef.Tell("message", "hello!", parentActorRef)
 }
 
-func TestRemote(t *testing.T) {
+func TestAmqp(t *testing.T) {
 	InitDistributedActorSystem("http://etcd:2379")
 	defer CloseActorSystem()
 
@@ -180,20 +180,44 @@ func TestRemote(t *testing.T) {
 		message.Self.LogInfo("Received %v", message.Data)
 	})
 	defer actor1.Close()
-	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
+	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("message", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
 		message.Sender.Tell("reply", "hello back", message.Self)
 	})
 	defer actor2.Close()
-	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType("amqp").SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
+	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor2"))
 
 	actorRef1, _ := ActorSystem().ActorOf("actorX")
 	actorRef2, _ := ActorSystem().ActorOf("actorY")
 
 	actorRef2.Tell("message", "hello", actorRef1)
 	time.Sleep(500 * time.Millisecond)
+}
+
+func TestKafka(t *testing.T) {
+	InitDistributedActorSystem("http://etcd:2379")
+	defer CloseActorSystem()
+
+	actor1 := new(Actor).React("reply", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+	})
+	defer actor1.Close()
+	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor1"))
+
+	actor2 := new(Actor).React("message", func(message Message) {
+		message.Self.LogInfo("Received %v", message.Data)
+		message.Sender.Tell("reply", "hello back", message.Self)
+	})
+	defer actor2.Close()
+	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor2"))
+
+	actorRef1, _ := ActorSystem().ActorOf("actorX")
+	actorRef2, _ := ActorSystem().ActorOf("actorY")
+
+	actorRef2.Tell("message", "hello", actorRef1)
+	time.Sleep(2500 * time.Millisecond)
 }
 
 func TestRemoteClose(t *testing.T) {
