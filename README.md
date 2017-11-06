@@ -186,6 +186,18 @@ time.Sleep(21 * time.Millisecond)
 gosiris.ActorSystem().Stop(c)
 ```
 
+# Environment
+
+To configure a full gosiris environment, you need to instantiate an AMQP broker and an etcd registry. 
+The easiest way is obvisously to use Docker.
+ 
+```
+docker run -d -v /usr/share/ca-certificates/:/etc/ssl/certs -p 4001:4001 -p 2380:2380 -p 2379:2379 quay.io/coreos/etcd:v2.3.8 -name etcd0 -advertise-client-urls http://${HostIP}:2379,http://${HostIP}:4001 -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 -initial-advertise-peer-urls http://${HostIP}:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster-1 -initial-cluster etcd0=http://${HostIP}:2380 -initial-cluster-state new
+docker run -d --hostname rabbit --name rabbit -p 4369:4369 -p 5671:5671 -p 5672:5672 -p 15672:15672 rabbitmq
+```
+
+Furthermore, gosiris tests are using two hostnames you must configure: _etcd_ and _amqp_.
+
 # Contributing
 
 * Open an issue if you want a new feature or if you spotted a bug

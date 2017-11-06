@@ -331,6 +331,7 @@ func TestRepeat(t *testing.T) {
 	ActorSystem().Stop(c)
 }
 
+//TODO
 func TestDefaultWatcher(t *testing.T) {
 	InitLocalActorSystem()
 	defer CloseActorSystem()
@@ -343,10 +344,7 @@ func TestDefaultWatcher(t *testing.T) {
 	childActor := Actor{}
 	defer childActor.Close()
 
-	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, new(ActorOptions).SetDefaultWatcher(5*time.Second))
+	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, new(ActorOptions).SetDefaultWatcher(5*time.Millisecond))
 
-	//parentActorRef, _ := ActorSystem().ActorOf("parentActor")
-	//childActorRef, _ := ActorSystem().ActorOf("childActor")
-
-	time.Sleep(21 * time.Second)
+	time.Sleep(21 * time.Millisecond)
 }
