@@ -13,32 +13,32 @@ type amqpTransport struct {
 	channel    *amqp.Channel
 }
 
-func (amqpConnection *amqpTransport) Configure(url string, options map[string]string) {
-	amqpConnection.url = url
+func (a *amqpTransport) Configure(url string, options map[string]string) {
+	a.url = url
 }
 
-func (amqpConnection *amqpTransport) Connection() error {
-	c, err := amqp.Dial(amqpConnection.url)
+func (a *amqpTransport) Connection() error {
+	c, err := amqp.Dial(a.url)
 	if err != nil {
-		ErrorLogger.Printf("Failed to connect to the AMQP server %v", amqpConnection.url)
+		ErrorLogger.Printf("Failed to connect to the AMQP server %v", a.url)
 		return err
 	}
-	amqpConnection.connection = c
+	a.connection = c
 
 	ch, err := c.Channel()
 	if err != nil {
-		ErrorLogger.Printf("Failed to open an AMQP channel on the server %v", amqpConnection.url)
+		ErrorLogger.Printf("Failed to open an AMQP channel on the server %v", a.url)
 		return err
 	}
-	amqpConnection.channel = ch
+	a.channel = ch
 
-	InfoLogger.Printf("Connected to %v", amqpConnection.url)
+	InfoLogger.Printf("Connected to %v", a.url)
 
 	return nil
 }
 
-func (amqpConnection *amqpTransport) Receive(queueName string) {
-	q, err := amqpConnection.channel.QueueDeclare(
+func (a *amqpTransport) Receive(queueName string) {
+	q, err := a.channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
 		false,     // delete when unused
@@ -51,7 +51,7 @@ func (amqpConnection *amqpTransport) Receive(queueName string) {
 		ErrorLogger.Printf("Error while declaring queue %v: %v", queueName, err)
 	}
 
-	msgs, err := amqpConnection.channel.Consume(
+	msgs, err := a.channel.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack
@@ -68,16 +68,16 @@ func (amqpConnection *amqpTransport) Receive(queueName string) {
 	}
 }
 
-func (amqpConnection *amqpTransport) Close() {
-	amqpConnection.channel.Close()
-	amqpConnection.connection.Close()
+func (a *amqpTransport) Close() {
+	a.channel.Close()
+	a.connection.Close()
 }
 
-func (amqpConnection *amqpTransport) Send(destination string, data []byte) error {
+func (a *amqpTransport) Send(destination string, data []byte) error {
 	json := string(data)
 	InfoLogger.Printf("Sending %v", json)
 
-	q, err := amqpConnection.channel.QueueDeclare(
+	q, err := a.channel.QueueDeclare(
 		destination, // name
 		false,       // durable
 		false,       // delete when unused
@@ -91,7 +91,7 @@ func (amqpConnection *amqpTransport) Send(destination string, data []byte) error
 	}
 
 	body := data
-	err = amqpConnection.channel.Publish(
+	err = a.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
