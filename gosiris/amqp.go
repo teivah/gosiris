@@ -11,7 +11,7 @@ type AmqpConnection struct {
 	channel    *amqp.Channel
 }
 
-func (amqpConnection *AmqpConnection) Configure(url string) {
+func (amqpConnection *AmqpConnection) Configure(url string, options map[string] string) {
 	amqpConnection.url = url
 }
 

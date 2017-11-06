@@ -7,7 +7,7 @@ import (
 var remoteConnections map[string]RemoteConnectionInterface
 
 type RemoteConnectionInterface interface {
-	Configure(string)
+	Configure(string, map[string] string)
 	Connection() error
 	Send(string, []byte)
 	Receive(string)
@@ -21,7 +21,7 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 	for k, v := range configuration {
 		if v.RemoteType() == "amqp" {
 			c := AmqpConnection{}
-			c.Configure(v.Url())
+			c.Configure(v.Url(), nil)
 			err := c.Connection()
 			if err != nil {
 				ErrorLogger.Printf("Failed to initialize the connection with %v: %v", v, err)
@@ -36,7 +36,7 @@ func InitRemoteConnections(configuration map[string]OptionsInterface) {
 func AddConnection(name string, conf OptionsInterface) {
 	if conf.RemoteType() == "amqp" {
 		c := AmqpConnection{}
-		c.Configure(conf.Url())
+		c.Configure(conf.Url(), nil)
 		err := c.Connection()
 		if err != nil {
 			ErrorLogger.Printf("Failed to initialize the connection with %v: %v", name, err)

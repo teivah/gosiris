@@ -6,7 +6,7 @@ import (
 
 func TestPublish(t *testing.T) {
 	r := AmqpConnection{}
-	r.Configure("amqp://guest:guest@amqp:5672/")
+	r.Configure("amqp://guest:guest@amqp:5672/", nil)
 
 	r.Send("test", nil)
 
