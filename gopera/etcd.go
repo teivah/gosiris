@@ -75,7 +75,7 @@ func parseNode(node *client.Node) (string, *ActorOptions) {
 		strings.Split(v, delimiter)
 	k := node.Key
 
-	return k[len(actors_configuration):], &ActorOptions{a[0], true, true, a[1], a[2], a[3], 0}
+	return k[len(actors_configuration):], &ActorOptions{a[0], true, true, a[1], a[2], a[3], 0, 0}
 }
 
 func (etcdClient *etcdClient) ParseConfiguration() (map[string]OptionsInterface, error) {

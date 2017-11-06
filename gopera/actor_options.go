@@ -1,17 +1,20 @@
 package gopera
 
+import "time"
+
 const (
 	defaultBufferSize = 64
 )
 
 type ActorOptions struct {
-	parent      string
-	remote      bool //Default: false
-	autoclose   bool //Default: false
-	remoteType  string
-	url         string
-	destination string
-	bufferSize  int //Default: 64
+	parent         string
+	remote         bool //Default: false
+	autoclose      bool //Default: false
+	remoteType     string
+	url            string
+	destination    string
+	bufferSize     int //Default: 64
+	defaultWatcher time.Duration
 }
 
 type OptionsInterface interface {
@@ -27,8 +30,10 @@ type OptionsInterface interface {
 	Destination() string
 	setParent(string)
 	Parent() string
-	SetBufferSize(int)
+	SetBufferSize(int) OptionsInterface
 	BufferSize() int
+	SetDefaultWatcher(time.Duration) OptionsInterface
+	DefaultWatcher() time.Duration
 }
 
 func (options *ActorOptions) SetRemote(b bool) OptionsInterface {
@@ -84,10 +89,20 @@ func (options *ActorOptions) Parent() string {
 	return options.parent
 }
 
-func (options *ActorOptions) SetBufferSize(i int) {
+func (options *ActorOptions) SetBufferSize(i int) OptionsInterface {
 	options.bufferSize = i
+	return options
 }
 
 func (options *ActorOptions) BufferSize() int {
 	return options.bufferSize
+}
+
+func (options *ActorOptions) SetDefaultWatcher(d time.Duration) OptionsInterface {
+	options.defaultWatcher = d
+	return options
+}
+
+func (options *ActorOptions) DefaultWatcher() time.Duration {
+	return options.defaultWatcher
 }

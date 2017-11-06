@@ -10,12 +10,14 @@ func init() {
 }
 
 const (
-	GoperaMsgPoisonPill  = "GoperaPoisonPill"
-	GoperaMsgChildClosed = "GoperaChildClosed"
-	jsonMessageType      = "messageType"
-	jsonData             = "data"
-	jsonSender           = "sender"
-	jsonSelf             = "self"
+	GoperaMsgPoisonPill       = "goperaPoisonPill"
+	GoperaMsgChildClosed      = "goperaChildClosed"
+	GoperaMsgHeartbeatRequest = "goperaHeartbeatRequest"
+	GoperaMsgHeartbeatReply   = "goperaHeartbeatReply"
+	jsonMessageType           = "messageType"
+	jsonData                  = "data"
+	jsonSender                = "sender"
+	jsonSelf                  = "self"
 )
 
 type Message struct {
@@ -70,7 +72,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 		}
 	}()
 
-	InfoLogger.Printf("Dispatching message %v", messageType)
+	InfoLogger.Printf("Dispatching message %v from %v to %v", messageType, sender.Name(), receiver.Name())
 
 	m := Message{messageType, data, sender, receiver}
 

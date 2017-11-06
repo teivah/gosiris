@@ -2,6 +2,7 @@ package gopera
 
 import (
 	"fmt"
+	"time"
 )
 
 var root *Actor
@@ -128,6 +129,23 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 		actorAssociation{actorRef, actor, options}
 
 	go receive(actor, options)
+
+	if options.DefaultWatcher() != 0 {
+		//Configure a default watcher
+		t := time.NewTicker(options.DefaultWatcher())
+		go func(t *time.Ticker, actorRef ActorRefInterface) {
+			for {
+				select {
+				case <-t.C:
+					p, err := system.actor(parent.Name())
+					if err != nil {
+						ErrorLogger.Printf("Parent of actor %v not found", name)
+					}
+					dispatch(p.actor.getDataChan(), GoperaMsgHeartbeatRequest, nil, actorRef, p.actorRef, new(ActorOptions))
+				}
+			}
+		}(t, actorRef)
+	}
 
 	return nil
 }
@@ -257,6 +275,10 @@ func (system *actorSystem) Invoke(message Message) error {
 			actorAssociation.actor.Close()
 			return nil
 		}
+	} else if message.MessageType == GoperaMsgHeartbeatRequest {
+		InfoLogger.Printf("Actor %v has received a heartbeat request", actorAssociation.actor.Name())
+
+		message.Sender.Tell(GoperaMsgHeartbeatReply, nil, message.Self)
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.MessageType]
