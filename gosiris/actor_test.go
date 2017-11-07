@@ -275,6 +275,7 @@ func TestAmqpKafka(t *testing.T) {
 
 	actor1 := new(Actor).React("reply", func(message Message) {
 		message.Self.LogInfo("Received %v", message.Data)
+		FinishSpan()
 	})
 	defer actor1.Close()
 	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))

@@ -11,7 +11,6 @@ var (
 	ctx         context.Context
 	span        opentracing.Span
 	collector   zipkin.Collector
-	stop        chan struct{}
 )
 
 type ZipkinOptions struct {
@@ -64,10 +63,16 @@ func logZipkinEvent(msg string) {
 	}
 }
 
-func closeZipkinSystem() {
+func FinishSpan() {
 	if initialized {
-		stop <- struct{}{}
 		span.Finish()
 		collector.Close()
 	}
+}
+
+func closeZipkinSystem() {
+	//if initialized {
+	//	span.Finish()
+	//	collector.Close()
+	//}
 }
