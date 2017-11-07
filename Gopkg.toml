@@ -1,6 +1,23 @@
 [[constraint]]
   name = "github.com/coreos/etcd"
   version = "3.2.9"
+
 [[constraint]]
   branch = "master"
   name = "github.com/streadway/amqp"
+
+[[constraint]]
+  name = "github.com/openzipkin/zipkin-go-opentracing"
+  version = "0.2.4"
+
+[[constraint]]
+  name = "github.com/apache/thrift"
+  version = "0.10.0"
+
+[[constraint]]
+  name = "github.com/Shopify/sarama"
+  version = "1.13.0"
+
+[[constraint]]
+  name = "github.com/opentracing/opentracing-go"
+  version = "1.0.2"

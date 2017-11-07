@@ -210,6 +210,15 @@ The last command is not mandatory but it allows to expose a web UI on the port 1
 
 Meanwhile, the gosiris tests are using several hostnames you need to configure: _etcd_, _amqp_ and _kafka_.
 
+# Troubleshooting
+
+You may experience errors like the following:
+```
+r.EncodeArrayStart undefined (type codec.encDriver has no field or method EncodeArrayStart)
+```
+
+This is a known issue with the etcd client used. The manual workaround (for the time being) is to delete manually the file _keys.generated.go_ generated in /vendor. 
+
 # Contributing
 
 * Open an issue if you want a new feature or if you spotted a bug
