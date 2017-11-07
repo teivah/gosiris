@@ -7,17 +7,22 @@ import (
 )
 
 var (
-	ctx       context.Context
-	span      opentracing.Span
-	collector zipkin.Collector
+	initialized bool
+	ctx         context.Context
+	span        opentracing.Span
+	collector   zipkin.Collector
+	stop        chan struct{}
 )
 
 type ZipkinOptions struct {
-	url string
+	Url      string
+	Debug    bool
+	HostPort string
+	SameSpan bool
 }
 
-func zipkinInit(url string, debug bool, hostPort string, actorSystemName string, sameSpan bool) error {
-	c, err := zipkin.NewHTTPCollector(url)
+func initZipkinSystem(actorSystemName string, options ZipkinOptions) error {
+	c, err := zipkin.NewHTTPCollector(options.Url)
 
 	collector = c
 
@@ -26,11 +31,11 @@ func zipkinInit(url string, debug bool, hostPort string, actorSystemName string,
 		return err
 	}
 
-	recorder := zipkin.NewRecorder(collector, debug, hostPort, actorSystemName)
+	recorder := zipkin.NewRecorder(collector, options.Debug, options.HostPort, actorSystemName)
 
 	tracer, err := zipkin.NewTracer(
 		recorder,
-		zipkin.ClientServerSameSpan(sameSpan),
+		zipkin.ClientServerSameSpan(options.SameSpan),
 		zipkin.TraceID128Bit(true),
 	)
 
@@ -44,13 +49,25 @@ func zipkinInit(url string, debug bool, hostPort string, actorSystemName string,
 	//client := svc1.NewHTTPClient(tracer, svc1Endpoint)
 
 	span = opentracing.StartSpan("Run")
-
 	ctx = opentracing.ContextWithSpan(context.Background(), span)
+
+	span.SetOperationName("System")
+
+	initialized = true
 
 	return nil
 }
 
-func logEvent(msg string) {
-	span.LogEvent(msg)
+func logZipkinEvent(msg string) {
+	if initialized {
+		span.LogEvent(msg)
+	}
+}
 
+func closeZipkinSystem() {
+	if initialized {
+		stop <- struct{}{}
+		span.Finish()
+		collector.Close()
+	}
 }

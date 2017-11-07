@@ -33,10 +33,12 @@ func newActorRef(name string) ActorRefInterface {
 }
 
 func (ref ActorRef) LogInfo(format string, a ...interface{}) {
+	logZipkinEvent(fmt.Sprintf(format, a...))
 	ref.infoLogger.Printf(format, a...)
 }
 
 func (ref ActorRef) LogError(format string, a ...interface{}) {
+	logZipkinEvent(fmt.Sprintf(format, a...))
 	ref.errorLogger.Printf(format, a...)
 }
 
@@ -91,7 +93,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 		return
 	}
 
-	dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options)
+	go dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {

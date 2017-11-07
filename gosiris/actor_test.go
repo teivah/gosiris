@@ -15,13 +15,16 @@ type ChildActor struct {
 	hello map[string]bool
 }
 
-func init() {
-	//InitDistributedActorSystem("http://etcd:2379")
-}
-
 func TestBasic(t *testing.T) {
+	t.Log("Starting Basic test")
+
+	//Configure the actor system options
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+
 	//Init a local actor system
-	InitLocalActorSystem()
+	InitActorSystem(opts)
 	//Defer the actor system closure
 	defer CloseActorSystem()
 
@@ -52,10 +55,17 @@ func TestBasic(t *testing.T) {
 
 	//Tell a message from the parent to the child actor
 	childActorRef.Tell("message", "Hi! How are you?", parentActorRef)
+
+	time.Sleep(250 * time.Millisecond)
 }
 
 func TestStatefulness(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting statefulness test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	childActor := ChildActor{}
@@ -92,10 +102,17 @@ func TestStatefulness(t *testing.T) {
 
 	childActorRef.Tell("hello", "teivah", parentActorRef)
 	childActorRef.Tell("hello", "teivah", parentActorRef)
+
+	time.Sleep(250 * time.Millisecond)
 }
 
 func TestForward(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting forward test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	parentActor := Actor{}
@@ -128,11 +145,16 @@ func TestForward(t *testing.T) {
 	forwarderActorRef, _ := ActorSystem().ActorOf("forwarderActor")
 
 	forwarderActorRef.Tell("message", "to be forwarded", parentActorRef)
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 }
 
 func TestBecomeUnbecome(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting become/unbecome test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	angry := func(message Message) {
@@ -170,10 +192,18 @@ func TestBecomeUnbecome(t *testing.T) {
 	childActorRef.Tell("message", "hello!", parentActorRef)
 	childActorRef.Tell("message", "happy", parentActorRef)
 	childActorRef.Tell("message", "hello!", parentActorRef)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func TestAmqp(t *testing.T) {
-	InitDistributedActorSystem("http://etcd:2379")
+	t.Log("Starting AMQP test")
+	time.Sleep(500 * time.Millisecond)
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(message Message) {
@@ -197,7 +227,13 @@ func TestAmqp(t *testing.T) {
 }
 
 func TestKafka(t *testing.T) {
-	InitDistributedActorSystem("http://etcd:2379")
+	t.Log("Starting Kafka test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(message Message) {
@@ -221,7 +257,20 @@ func TestKafka(t *testing.T) {
 }
 
 func TestAmqpKafka(t *testing.T) {
-	InitDistributedActorSystem("http://etcd:2379")
+	t.Log("Starting AMQP/Kakfa test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+		ZipkinOptions: ZipkinOptions{
+			Url:      "http://zipkin:9411/api/v1/spans",
+			Debug:    true,
+			HostPort: "0.0.0.0",
+			SameSpan: true,
+		},
+	}
+
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(message Message) {
@@ -241,11 +290,17 @@ func TestAmqpKafka(t *testing.T) {
 	actorRef2, _ := ActorSystem().ActorOf("actorY")
 
 	actorRef2.Tell("message", "hello", actorRef1)
-	time.Sleep(2500 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 }
 
 func TestRemoteClose(t *testing.T) {
-	InitDistributedActorSystem("http://etcd:2379")
+	t.Log("Starting remote close test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actorY := new(Actor).React("hello", func(message Message) {
@@ -257,10 +312,16 @@ func TestRemoteClose(t *testing.T) {
 
 	a, _ := ActorSystem().ActorOf("actorY")
 	a.AskForClose(a)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func TestAutocloseTrue(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting auto close true test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actorY := new(Actor)
@@ -269,10 +330,16 @@ func TestAutocloseTrue(t *testing.T) {
 	a, _ := ActorSystem().ActorOf("actorY")
 
 	a.AskForClose(a)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func TestAutocloseFalse(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting auto close false test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actorY := new(Actor)
@@ -285,10 +352,16 @@ func TestAutocloseFalse(t *testing.T) {
 	a, _ := ActorSystem().ActorOf("actorY")
 
 	a.AskForClose(a)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func TestChildClosedNotificationLocal(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting child closed notification test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actorParent := new(Actor)
@@ -320,7 +393,13 @@ func TestChildClosedNotificationLocal(t *testing.T) {
 }
 
 func TestChildClosedNotificationRemote(t *testing.T) {
-	InitDistributedActorSystem("http://etcd:2379")
+	t.Log("Starting child closed notification remote test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	actorParent := new(Actor)
@@ -352,7 +431,12 @@ func TestChildClosedNotificationRemote(t *testing.T) {
 }
 
 func TestRepeat(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting repeat test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	parentActor := Actor{}
@@ -377,11 +461,17 @@ func TestRepeat(t *testing.T) {
 	time.Sleep(21 * time.Millisecond)
 
 	ActorSystem().Stop(c)
+	time.Sleep(500 * time.Millisecond)
 }
 
 //TODO
 func TestDefaultWatcher(t *testing.T) {
-	InitLocalActorSystem()
+	t.Log("Starting default watcher test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
 	defer CloseActorSystem()
 
 	parentActor := Actor{}

@@ -17,6 +17,7 @@ type ActorOptions struct {
 	defaultWatcher time.Duration
 }
 
+//TODO No interface
 type OptionsInterface interface {
 	SetUrl(string) OptionsInterface
 	SetRemote(bool) OptionsInterface

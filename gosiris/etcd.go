@@ -39,7 +39,6 @@ func (etcdClient *etcdClient) Configure(url ...string) error {
 }
 
 func (etcdClient *etcdClient) Close() {
-
 }
 
 func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDelete func(string)) error {

@@ -10,13 +10,19 @@ var actorSystemInstance actorSystem
 var actorSystemStarted bool
 var registry registryInterface
 
+type SystemOptions struct {
+	ActorSystemName string
+	ZipkinOptions   ZipkinOptions
+	RegistryUrl     string
+}
+
 func init() {
 	root = &Actor{}
 	root.name = "root"
 	actorSystemStarted = false
 }
 
-func InitLocalActorSystem() error {
+func InitActorSystem(options SystemOptions) error {
 	if actorSystemStarted {
 		ErrorLogger.Printf("Actor system already started")
 		return fmt.Errorf("actor system already started")
@@ -26,18 +32,21 @@ func InitLocalActorSystem() error {
 	actorSystemInstance.actors = make(map[string]actorAssociation)
 	actorSystemStarted = true
 
+	if options.RegistryUrl != "" {
+		initDistributedActorSystem(options.RegistryUrl)
+	}
+
+	if options.ZipkinOptions.Url != "" {
+		initZipkinSystem(options.ActorSystemName, options.ZipkinOptions)
+	}
+
 	return nil
 }
 
-func InitDistributedActorSystem(url ...string) error {
-	e := InitLocalActorSystem()
-	if e != nil {
-		return e
-	}
-
+func initDistributedActorSystem(url string) error {
 	//TODO Manage the implementation dynamically
 	registry = &etcdClient{}
-	err := registry.Configure(url...)
+	err := registry.Configure(url)
 	if err != nil {
 		actorSystemStarted = false
 		FatalLogger.Fatalf("Failed to configure access to the remote repository: %v", err)
@@ -71,6 +80,7 @@ func CloseActorSystem() error {
 	InfoLogger.Printf("Actor system closed")
 
 	actorSystemStarted = false
+	closeZipkinSystem()
 
 	return nil
 }
