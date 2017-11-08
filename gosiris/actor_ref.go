@@ -22,6 +22,11 @@ type ActorRefInterface interface {
 	Unbecome(string) error
 	Name() string
 	Forward(Message, ...string)
+	//ZipkinStartSpan(spanName, operationName string)
+	//ZipkinStartChildSpan(parentSpanName, spanName, operationName string)
+	//ZipkinStopSpan(spanName string)
+	//ZipkinLogFields(spanName string, fields ...zpklog.Field)
+	//ZipkinLogKV(spanName string, alternatingKeyValues ...interface{})
 }
 
 func newActorRef(name string) ActorRefInterface {
@@ -33,12 +38,10 @@ func newActorRef(name string) ActorRefInterface {
 }
 
 func (ref ActorRef) LogInfo(format string, a ...interface{}) {
-	logZipkinEvent(fmt.Sprintf(format, a...))
 	ref.infoLogger.Printf(format, a...)
 }
 
 func (ref ActorRef) LogError(format string, a ...interface{}) {
-	logZipkinEvent(fmt.Sprintf(format, a...))
 	ref.errorLogger.Printf(format, a...)
 }
 
@@ -153,3 +156,23 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 		actorRef.Tell(message.MessageType, message.Data, message.Sender)
 	}
 }
+
+//func (ref ActorRef) ZipkinStartSpan(spanName, operationName string) {
+//	startZipkinSpan(spanName, operationName)
+//}
+//
+//func (ref ActorRef) ZipkinStartChildSpan(parentSpanName, spanName, operationName string) {
+//	startZipkinChildSpan(parentSpanName, spanName, operationName)
+//}
+//
+//func (ref ActorRef) ZipkinStopSpan(spanName string) {
+//	stopZipkinSpan(spanName)
+//}
+
+//func (ref ActorRef) ZipkinLogFields(spanName string, fields ...zpklog.Field) {
+//	logZipkinFields(spanName, fields...)
+//}
+//
+//func (ref ActorRef) ZipkinLogKV(spanName string, alternatingKeyValues ...interface{}) {
+//	logZipkinKV(spanName, alternatingKeyValues...)
+//}

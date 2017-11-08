@@ -274,24 +274,24 @@ func TestAmqpKafka(t *testing.T) {
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(message Message) {
-		message.Self.LogInfo("Received %v", message.Data)
-		FinishSpan()
+		message.Self.LogInfo("Received1 %v", message.Data)
 	})
 	defer actor1.Close()
-	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
+	ActorSystem().RegisterActor("amqpActor", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("message", func(message Message) {
-		message.Self.LogInfo("Received %v", message.Data)
+		message.Self.LogInfo("Received2 %v", message.Data)
 		message.Sender.Tell("reply", "hello back", message.Self)
 	})
 	defer actor2.Close()
-	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor2"))
+	ActorSystem().SpawnActor(actor1, "kafkaActor", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor2"))
 
-	actorRef1, _ := ActorSystem().ActorOf("actorX")
-	actorRef2, _ := ActorSystem().ActorOf("actorY")
+	amqpRef, _ := ActorSystem().ActorOf("amqpActor")
+	kafkaRef, _ := ActorSystem().ActorOf("kafkaActor")
 
-	actorRef2.Tell("message", "hello", actorRef1)
-	time.Sleep(1500 * time.Millisecond)
+	//How to know when a tell is part of a span or not?
+	kafkaRef.Tell("message", "hello", amqpRef)
+	time.Sleep(1500 * time.Second)
 }
 
 func TestRemoteClose(t *testing.T) {

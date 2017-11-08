@@ -3,14 +3,12 @@ package gosiris
 import (
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/opentracing/opentracing-go"
-	"context"
 )
 
 var (
-	initialized bool
-	ctx         context.Context
-	span        opentracing.Span
-	collector   zipkin.Collector
+	zipkinSystemInitialized bool
+	collector               zipkin.Collector
+	tracer                  opentracing.Tracer
 )
 
 type ZipkinOptions struct {
@@ -32,11 +30,13 @@ func initZipkinSystem(actorSystemName string, options ZipkinOptions) error {
 
 	recorder := zipkin.NewRecorder(collector, options.Debug, options.HostPort, actorSystemName)
 
-	tracer, err := zipkin.NewTracer(
+	t, err := zipkin.NewTracer(
 		recorder,
 		zipkin.ClientServerSameSpan(options.SameSpan),
 		zipkin.TraceID128Bit(true),
 	)
+
+	tracer = t
 
 	if err != nil {
 		ErrorLogger.Printf("Failed to create a Zipkin tracer: %v", err)
@@ -45,34 +45,96 @@ func initZipkinSystem(actorSystemName string, options ZipkinOptions) error {
 
 	opentracing.InitGlobalTracer(tracer)
 
-	//client := svc1.NewHTTPClient(tracer, svc1Endpoint)
-
-	span = opentracing.StartSpan("Run")
-	ctx = opentracing.ContextWithSpan(context.Background(), span)
-
-	span.SetOperationName("System")
-
-	initialized = true
+	zipkinSystemInitialized = true
 
 	return nil
 }
 
-func logZipkinEvent(msg string) {
-	if initialized {
-		span.LogEvent(msg)
+//func logZipkinFields(spanName string, fields ...log.Field) {
+//	if !zipkinSystemInitialized {
+//		ErrorLogger.Printf("Zipkin system not started")
+//		return
+//	}
+//
+//	span, exists := spans[spanName]
+//	if !exists {
+//		ErrorLogger.Printf("Span %v not started", spanName)
+//		return
+//	}
+//
+//	span.LogFields(fields...)
+//}
+//
+//func logZipkinKV(spanName string, alternatingKeyValues ...interface{}) {
+//	if !zipkinSystemInitialized {
+//		ErrorLogger.Printf("Zipkin system not started")
+//		return
+//	}
+//
+//	span, exists := spans[spanName]
+//	if !exists {
+//		ErrorLogger.Printf("Span %v not started", spanName)
+//		return
+//	}
+//
+//	span.LogKV(alternatingKeyValues...)
+//}
+
+func inject(span opentracing.Span) (opentracing.TextMapCarrier, error) {
+	carrier := opentracing.TextMapCarrier{}
+
+	err := tracer.Inject(span.Context(), opentracing.TextMap, carrier)
+
+	if err != nil {
+		ErrorLogger.Printf("Failed to inject: %v", err)
+		return nil, err
 	}
+
+	return carrier, nil
 }
 
-func FinishSpan() {
-	if initialized {
-		span.Finish()
-		collector.Close()
+func extract(carrier opentracing.TextMapCarrier) (opentracing.SpanContext, error) {
+	return tracer.Extract(opentracing.TextMap, carrier)
+}
+
+func startZipkinSpan(spanName, operationName string) opentracing.Span {
+	if !zipkinSystemInitialized {
+		ErrorLogger.Printf("Zipkin system not started")
+		return nil
 	}
+	span := opentracing.StartSpan(spanName)
+	span.SetOperationName(operationName)
+
+	InfoLogger.Printf("Span %v started", spanName)
+
+	return span
+}
+
+//func startZipkinChildSpan(parentSpanName, spanName, operationName string) {
+//	if !zipkinSystemInitialized {
+//		ErrorLogger.Printf("Zipkin system not started")
+//		return
+//	}
+//
+//	parentSpan, exists := spans[parentSpanName]
+//	if !exists {
+//		ErrorLogger.Printf("Parent span %v not started", parentSpanName)
+//		return
+//	}
+//
+//	span := opentracing.StartSpan(operationName, opentracing.ChildOf(parentSpan.Context()))
+//	spans[spanName] = span
+//
+//	InfoLogger.Printf("Child span %v of parent %v started", spanName, parentSpanName)
+//}
+//
+func stopZipkinSpan(span opentracing.Span) {
+	span.Finish()
 }
 
 func closeZipkinSystem() {
-	//if initialized {
-	//	span.Finish()
-	//	collector.Close()
-	//}
+	if zipkinSystemInitialized {
+		InfoLogger.Printf("Closing Zipkin system")
+		collector.Close()
+	}
 }

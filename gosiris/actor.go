@@ -1,5 +1,7 @@
 package gosiris
 
+import "github.com/opentracing/opentracing-go"
+
 func RootActor() *Actor {
 	return root
 }
@@ -11,6 +13,7 @@ type Actor struct {
 	closeChan chan int
 	parent    actorInterface
 	unbecome  map[string]func(Message)
+	span      opentracing.Span
 }
 
 type RemoteActor struct {

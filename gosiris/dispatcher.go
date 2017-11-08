@@ -3,6 +3,7 @@ package gosiris
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 )
 
 func init() {
@@ -14,10 +15,12 @@ const (
 	GosirisMsgChildClosed      = "gosirisChildClosed"
 	GosirisMsgHeartbeatRequest = "gosirisHeartbeatRequest"
 	GosirisMsgHeartbeatReply   = "gosirisHeartbeatReply"
-	jsonMessageType            = "messageType"
-	jsonData                   = "data"
-	jsonSender                 = "sender"
-	jsonSelf                   = "self"
+
+	jsonMessageType = "messageType"
+	jsonData        = "data"
+	jsonSender      = "sender"
+	jsonSelf        = "self"
+	jsonCtx         = "ctx"
 )
 
 type Message struct {
@@ -25,6 +28,7 @@ type Message struct {
 	Data        interface{}
 	Sender      ActorRefInterface
 	Self        ActorRefInterface
+	tracer      opentracing.Tracer
 }
 
 func (message Message) MarshalJSON() ([]byte, error) {
@@ -74,7 +78,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 
 	InfoLogger.Printf("Dispatching message %v from %v to %v", messageType, sender.Name(), receiver.Name())
 
-	m := Message{messageType, data, sender, receiver}
+	m := Message{messageType, data, sender, receiver, nil}
 
 	if !options.Remote() {
 		channel <- m
