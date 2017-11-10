@@ -10,7 +10,7 @@ type Actor struct {
 	name      string
 	conf      map[string]func(Context)
 	dataChan  chan Context
-	closeChan chan int
+	closeChan chan interface{}
 	parent    actorInterface
 	unbecome  map[string]func(Context)
 	span      opentracing.Span
@@ -26,8 +26,8 @@ type actorInterface interface {
 	unbecomeHistory() map[string]func(Context)
 	getDataChan() chan Context
 	setDataChan(chan Context)
-	getCloseChan() chan int
-	setCloseChan(chan int)
+	getCloseChan() chan interface{}
+	setCloseChan(chan interface{})
 	setName(string)
 	setParent(actorInterface)
 	Parent() ActorRefInterface
@@ -70,11 +70,11 @@ func (actor *Actor) setDataChan(dataChan chan Context) {
 	actor.dataChan = dataChan
 }
 
-func (actor *Actor) getCloseChan() chan int {
+func (actor *Actor) getCloseChan() chan interface{} {
 	return actor.closeChan
 }
 
-func (actor *Actor) setCloseChan(closeChan chan int) {
+func (actor *Actor) setCloseChan(closeChan chan interface{}) {
 	actor.closeChan = closeChan
 }
 

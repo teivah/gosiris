@@ -128,6 +128,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	options.setParent(parent.Name())
 	if !options.Remote() {
 		actor.setDataChan(make(chan Context, options.BufferSize()))
+		actor.setCloseChan(make(chan interface{}))
 	} else {
 		registry.RegisterActor(name, options)
 		go registry.Watch(system.onActorCreatedFromRegistry, system.onActorRemovedFromRegistry)
@@ -221,9 +222,14 @@ func (system *actorSystem) closeLocalActor(name string) {
 		}
 	}
 
-	m := v.actor.getDataChan()
-	if m != nil {
-		close(m)
+	//m := v.actor.getDataChan()
+	//if m != nil {
+	//	close(m)
+	//}
+
+	c := v.actor.getCloseChan()
+	if c != nil {
+		c <- 0
 	}
 
 	if registry != nil {
