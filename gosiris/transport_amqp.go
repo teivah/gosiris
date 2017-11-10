@@ -69,7 +69,7 @@ func (a *amqpTransport) Receive(queueName string) {
 		nil,    // args
 	)
 	for d := range msgs {
-		msg := Message{}
+		msg := Context{}
 		json.Unmarshal(d.Body, &msg)
 		InfoLogger.Printf("New AMQP message received: %v", msg)
 		ActorSystem().Invoke(msg)

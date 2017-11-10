@@ -127,7 +127,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 	actor.setParent(parent)
 	options.setParent(parent.Name())
 	if !options.Remote() {
-		actor.setDataChan(make(chan Message, options.BufferSize()))
+		actor.setDataChan(make(chan Context, options.BufferSize()))
 	} else {
 		registry.RegisterActor(name, options)
 		go registry.Watch(system.onActorCreatedFromRegistry, system.onActorRemovedFromRegistry)
@@ -217,7 +217,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 			if err != nil {
 				ErrorLogger.Printf("Parent %v not registered", parentName)
 			}
-			p.actorRef.Tell(EmptyMessage, GosirisMsgChildClosed, name, v.actorRef)
+			p.actorRef.Tell(EmptyContext, GosirisMsgChildClosed, name, v.actorRef)
 		}
 	}
 
@@ -266,7 +266,7 @@ func (system *actorSystem) ActorOf(name string) (ActorRefInterface, error) {
 	return actorAssociation.actorRef, err
 }
 
-func (system *actorSystem) Invoke(message Message) error {
+func (system *actorSystem) Invoke(message Context) error {
 	if message.Self == nil {
 		return nil
 	}
@@ -291,7 +291,7 @@ func (system *actorSystem) Invoke(message Message) error {
 	} else if message.MessageType == GosirisMsgHeartbeatRequest {
 		InfoLogger.Printf("Actor %v has received a heartbeat request", actorAssociation.actor.Name())
 
-		message.Sender.Tell(EmptyMessage, GosirisMsgHeartbeatReply, nil, message.Self)
+		message.Sender.Tell(EmptyContext, GosirisMsgHeartbeatReply, nil, message.Self)
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.MessageType]

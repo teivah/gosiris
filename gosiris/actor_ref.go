@@ -15,19 +15,19 @@ type ActorRef struct {
 }
 
 type ActorRefInterface interface {
-	Tell(Message, string, interface{}, ActorRefInterface) error
+	Tell(Context, string, interface{}, ActorRefInterface) error
 	Repeat(string, time.Duration, interface{}, ActorRefInterface) (chan struct{}, error)
 	AskForClose(ActorRefInterface)
 	LogInfo(string, ...interface{})
 	LogError(string, ...interface{})
-	Become(string, func(Message)) error
+	Become(string, func(Context)) error
 	Unbecome(string) error
 	Name() string
-	Forward(Message, ...string)
+	Forward(Context, ...string)
 	//ZipkinStartSpan(spanName, operationName string)
 	//ZipkinStartChildSpan(parentSpanName, spanName, operationName string)
 	//ZipkinStopSpan(spanName string)
-	ZipkinLogFields(Message, ...zlog.Field)
+	ZipkinLogFields(Context, ...zlog.Field)
 	//ZipkinLogKV(spanName string, alternatingKeyValues ...interface{})
 }
 
@@ -47,7 +47,7 @@ func (ref ActorRef) LogError(format string, a ...interface{}) {
 	ref.errorLogger.Printf(format, a...)
 }
 
-func (ref ActorRef) Tell(message Message, messageType string, data interface{}, sender ActorRefInterface) error {
+func (ref ActorRef) Tell(context Context, messageType string, data interface{}, sender ActorRefInterface) error {
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
@@ -56,9 +56,9 @@ func (ref ActorRef) Tell(message Message, messageType string, data interface{}, 
 	}
 
 	var span opentracing.Span = nil
-	if message.span != nil {
-		span = message.span
-	} else if zipkinSystemInitialized {
+	if context.span != nil {
+		span = context.span
+	} else if zipkinSystemInitialized && messageType != GosirisMsgChildClosed {
 		span = startZipkinSpan(sender.Name(), messageType)
 	}
 
@@ -112,7 +112,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 	go dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options, nil)
 }
 
-func (ref ActorRef) Become(messageType string, f func(Message)) error {
+func (ref ActorRef) Become(messageType string, f func(Context)) error {
 	actor, err := ActorSystem().actor(ref.name)
 	if err != nil {
 		return fmt.Errorf("actor implementation %v not found", messageType)
@@ -160,13 +160,13 @@ func (ref ActorRef) Name() string {
 	return ref.name
 }
 
-func (ref ActorRef) Forward(message Message, destinations ...string) {
+func (ref ActorRef) Forward(context Context, destinations ...string) {
 	for _, v := range destinations {
 		actorRef, err := ActorSystem().ActorOf(v)
 		if err != nil {
 			fmt.Errorf("actor %v is not part of the actor system", v)
 		}
-		actorRef.Tell(message, message.MessageType, message.Data, message.Sender)
+		actorRef.Tell(context, context.MessageType, context.Data, context.Sender)
 	}
 }
 
@@ -182,7 +182,7 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 //	stopZipkinSpan(spanName)
 //}
 
-func (ref ActorRef) ZipkinLogFields(message Message, fields ...zlog.Field) {
+func (ref ActorRef) ZipkinLogFields(message Context, fields ...zlog.Field) {
 	logZipkinFields(message.span, fields...)
 }
 

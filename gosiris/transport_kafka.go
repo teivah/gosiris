@@ -69,7 +69,7 @@ func (k *kafkaTransport) Receive(queueName string) {
 		case err := <-consumer.Errors():
 			ErrorLogger.Printf("Kafka consumer error: %v", err)
 		case message := <-consumer.Messages():
-			msg := EmptyMessage
+			msg := EmptyContext
 			json.Unmarshal(message.Value, &msg)
 			InfoLogger.Printf("New Kafka message received: %v", msg)
 			ActorSystem().Invoke(msg)

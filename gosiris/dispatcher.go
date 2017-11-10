@@ -11,7 +11,7 @@ func init() {
 }
 
 var (
-	EmptyMessage Message = Message{}
+	EmptyContext Context = Context{}
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 	jsonTracing     = "tracing"
 )
 
-type Message struct {
+type Context struct {
 	MessageType string
 	Data        interface{}
 	Sender      ActorRefInterface
@@ -36,17 +36,17 @@ type Message struct {
 	span        opentracing.Span
 }
 
-func (message Message) MarshalJSON() ([]byte, error) {
+func (context Context) MarshalJSON() ([]byte, error) {
 	m := make(map[string]interface{})
-	m[jsonMessageType] = message.MessageType
-	m[jsonData] = fmt.Sprint(message.Data)
-	m[jsonSender] = message.Sender.Name()
-	m[jsonSelf] = message.Self.Name()
-	m[jsonTracing] = message.carrier
+	m[jsonMessageType] = context.MessageType
+	m[jsonData] = fmt.Sprint(context.Data)
+	m[jsonSender] = context.Sender.Name()
+	m[jsonSelf] = context.Self.Name()
+	m[jsonTracing] = context.carrier
 	return json.Marshal(m)
 }
 
-func (message *Message) UnmarshalJSON(b []byte) error {
+func (context *Context) UnmarshalJSON(b []byte) error {
 	var m map[string]interface{}
 	err := json.Unmarshal(b, &m)
 	if err != nil {
@@ -54,31 +54,31 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	message.MessageType = m[jsonMessageType].(string)
+	context.MessageType = m[jsonMessageType].(string)
 
-	message.Data = m[jsonData]
+	context.Data = m[jsonData]
 
 	self := m[jsonSelf].(string)
 	selfAssociation, err := ActorSystem().actor(self)
 	if err != nil {
 		return err
 	}
-	message.Self = selfAssociation.actorRef
+	context.Self = selfAssociation.actorRef
 
 	sender := m[jsonSender].(string)
 	senderAssociation, err := ActorSystem().actor(sender)
 	if err != nil {
 		return err
 	}
-	message.Sender = senderAssociation.actorRef
+	context.Sender = senderAssociation.actorRef
 
 	if value, exists := m[jsonTracing]; exists {
 		if value != nil {
 			t := value.(map[string]interface{})
-			message.carrier = make(map[string]string)
+			context.carrier = make(map[string]string)
 
 			for k, v := range t {
-				message.carrier[k] = v.(string)
+				context.carrier[k] = v.(string)
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface, span opentracing.Span) error {
+func dispatch(channel chan Context, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface, span opentracing.Span) error {
 	defer func() {
 		if r := recover(); r != nil {
 			ErrorLogger.Printf("Dispatch recovered in %v", r)
@@ -96,11 +96,11 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 	InfoLogger.Printf("Dispatching message %v from %v to %v", messageType, sender.Name(), receiver.Name())
 
 	carrier, _ := inject(span)
-	m := Message{messageType, data, sender, receiver, carrier, nil}
+	m := Context{messageType, data, sender, receiver, carrier, nil}
 
 	if !options.Remote() {
 		channel <- m
-		InfoLogger.Printf("Message dispatched to local channel")
+		InfoLogger.Printf("Context dispatched to local channel")
 	} else {
 		d, err := RemoteConnection(receiver.Name())
 		if err != nil {
@@ -114,7 +114,7 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 		}
 
 		d.Send(options.Destination(), json)
-		InfoLogger.Printf("Message dispatched to remote channel %v", options.Destination())
+		InfoLogger.Printf("Context dispatched to remote channel %v", options.Destination())
 	}
 
 	return nil

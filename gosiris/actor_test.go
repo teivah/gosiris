@@ -43,7 +43,7 @@ type ChildActor struct {
 //	defer childActor.Close()
 //
 //	//Register the reactions to event types (here a reaction to message)
-//	childActor.React("message", func(message Message) {
+//	childActor.React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v\n", message.Data)
 //	})
 //
@@ -75,14 +75,14 @@ type ChildActor struct {
 //	parentActor := ParentActor{}
 //	defer parentActor.Close()
 //
-//	f := func(message Message) {
+//	f := func(message Context) {
 //		message.Self.LogInfo("Receive response %v\n", message.Data)
 //	}
 //
 //	parentActor.React("helloback", f).React("error", f).React("help", f)
 //	ActorSystem().RegisterActor("parent", &parentActor, nil)
 //
-//	childActor.React("hello", func(message Message) {
+//	childActor.React("hello", func(message Context) {
 //		message.Self.LogInfo("Receive request %v\n", message.Data)
 //
 //		name := message.Data.(string)
@@ -122,7 +122,7 @@ type ChildActor struct {
 //
 //	forwarderActor := Actor{}
 //	defer forwarderActor.Close()
-//	forwarderActor.React("message", func(message Message) {
+//	forwarderActor.React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v\n", message.Data)
 //		message.Self.Forward(message, "childActor1", "childActor2")
 //	})
@@ -130,14 +130,14 @@ type ChildActor struct {
 //
 //	childActor1 := Actor{}
 //	defer childActor1.Close()
-//	childActor1.React("message", func(message Message) {
+//	childActor1.React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 //	})
 //	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1, nil)
 //
 //	childActor2 := Actor{}
 //	defer childActor2.Close()
-//	childActor2.React("message", func(message Message) {
+//	childActor2.React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v from %v\n", message.Data, message.Sender)
 //	})
 //	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2, nil)
@@ -158,7 +158,7 @@ type ChildActor struct {
 //	InitActorSystem(opts)
 //	defer CloseActorSystem()
 //
-//	angry := func(message Message) {
+//	angry := func(message Context) {
 //		if message.Data == "happy" {
 //			message.Self.LogInfo("Unbecome\n")
 //			message.Self.Unbecome(message.MessageType)
@@ -167,7 +167,7 @@ type ChildActor struct {
 //		}
 //	}
 //
-//	happy := func(message Message) {
+//	happy := func(message Context) {
 //		if message.Data == "angry" {
 //			message.Self.LogInfo("I shall become angry\n")
 //			message.Self.Become(message.MessageType, angry)
@@ -207,13 +207,13 @@ type ChildActor struct {
 //	InitActorSystem(opts)
 //	defer CloseActorSystem()
 //
-//	actor1 := new(Actor).React("reply", func(message Message) {
+//	actor1 := new(Actor).React("reply", func(message Context) {
 //		message.Self.LogInfo("Received %v", message.Data)
 //	})
 //	defer actor1.Close()
 //	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 //
-//	actor2 := new(Actor).React("message", func(message Message) {
+//	actor2 := new(Actor).React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v", message.Data)
 //		message.Sender.Tell("reply", "hello back", message.Self)
 //	})
@@ -237,13 +237,13 @@ type ChildActor struct {
 //	InitActorSystem(opts)
 //	defer CloseActorSystem()
 //
-//	actor1 := new(Actor).React("reply", func(message Message) {
+//	actor1 := new(Actor).React("reply", func(message Context) {
 //		message.Self.LogInfo("Received %v", message.Data)
 //	})
 //	defer actor1.Close()
 //	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor1"))
 //
-//	actor2 := new(Actor).React("message", func(message Message) {
+//	actor2 := new(Actor).React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v", message.Data)
 //		message.Sender.Tell("reply", "hello back", message.Self)
 //	})
@@ -274,7 +274,7 @@ func TestAmqpKafka(t *testing.T) {
 	InitActorSystem(opts)
 	defer CloseActorSystem()
 
-	actor1 := new(Actor).React("reply", func(message Message) {
+	actor1 := new(Actor).React("reply", func(message Context) {
 		message.Self.ZipkinLogFields(message, log.String("amqp", "amqpx"))
 		message.Self.LogInfo("Received1 %v", message.Data)
 
@@ -282,7 +282,7 @@ func TestAmqpKafka(t *testing.T) {
 	defer actor1.Close()
 	ActorSystem().RegisterActor("amqpActor", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
-	actor2 := new(Actor).React("message", func(message Message) {
+	actor2 := new(Actor).React("message", func(message Context) {
 		message.Self.ZipkinLogFields(message, log.String("kafka", "kafkax"))
 		message.Self.LogInfo("Received2 %v", message.Data)
 		message.Sender.Tell(message, "reply", "hello back", message.Self)
@@ -293,8 +293,8 @@ func TestAmqpKafka(t *testing.T) {
 	amqpRef, _ := ActorSystem().ActorOf("amqpActor")
 	kafkaRef, _ := ActorSystem().ActorOf("kafkaActor")
 
-	kafkaRef.Tell(EmptyMessage, "message", "hello", amqpRef)
-	time.Sleep(1500 * time.Second)
+	kafkaRef.Tell(EmptyContext, "message", "hello", amqpRef)
+	time.Sleep(1500 * time.Millisecond)
 }
 
 //
@@ -308,7 +308,7 @@ func TestAmqpKafka(t *testing.T) {
 //	InitActorSystem(opts)
 //	defer CloseActorSystem()
 //
-//	actorY := new(Actor).React("hello", func(message Message) {
+//	actorY := new(Actor).React("hello", func(message Context) {
 //		message.Self.LogInfo("Received %v", message.Data)
 //		message.Sender.Tell("reply", fmt.Sprintf("Hello %v", message.Data), message.Self)
 //	})
@@ -348,7 +348,7 @@ func TestAmqpKafka(t *testing.T) {
 //	defer CloseActorSystem()
 //
 //	actorY := new(Actor)
-//	actorY.React(GosirisMsgPoisonPill, func(message Message) {
+//	actorY.React(GosirisMsgPoisonPill, func(message Context) {
 //		message.Self.LogInfo("Received a poison pill, closing.")
 //		actorY.Close()
 //	})
@@ -371,12 +371,12 @@ func TestAmqpKafka(t *testing.T) {
 //
 //	actorParent := new(Actor)
 //	defer actorParent.Close()
-//	actorParent.React(GosirisMsgChildClosed, func(message Message) {
+//	actorParent.React(GosirisMsgChildClosed, func(message Context) {
 //		message.Self.LogInfo("My child is closed")
 //	})
 //
 //	actorChild := new(Actor)
-//	actorChild.React("do", func(message Message) {
+//	actorChild.React("do", func(message Context) {
 //		if message.Data == 0 {
 //			message.Self.LogInfo("I feel like being closed")
 //			actorChild.Close()
@@ -409,12 +409,12 @@ func TestAmqpKafka(t *testing.T) {
 //
 //	actorParent := new(Actor)
 //	defer actorParent.Close()
-//	actorParent.React(GosirisMsgChildClosed, func(message Message) {
+//	actorParent.React(GosirisMsgChildClosed, func(message Context) {
 //		message.Self.LogInfo("My child is closed")
 //	})
 //
 //	actorChild := new(Actor)
-//	actorChild.React("do", func(message Message) {
+//	actorChild.React("do", func(message Context) {
 //		if message.Data == "0" {
 //			message.Self.LogInfo("I feel like being closed")
 //			actorChild.Close()
@@ -452,7 +452,7 @@ func TestAmqpKafka(t *testing.T) {
 //	childActor := Actor{}
 //	defer childActor.Close()
 //
-//	childActor.React("message", func(message Message) {
+//	childActor.React("message", func(message Context) {
 //		message.Self.LogInfo("Received %v\n", message.Data)
 //	})
 //

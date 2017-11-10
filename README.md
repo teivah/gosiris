@@ -212,7 +212,7 @@ Meanwhile, the gosiris tests are using several hostnames you need to configure: 
 
 # Troubleshooting
 
-You may experience errors like the following:
+You may experience errors during the tests like the following:
 ```
 r.EncodeArrayStart undefined (type codec.encDriver has no field or method EncodeArrayStart)
 ```

@@ -8,11 +8,11 @@ func RootActor() *Actor {
 
 type Actor struct {
 	name      string
-	conf      map[string]func(Message)
-	dataChan  chan Message
+	conf      map[string]func(Context)
+	dataChan  chan Context
 	closeChan chan int
 	parent    actorInterface
-	unbecome  map[string]func(Message)
+	unbecome  map[string]func(Context)
 	span      opentracing.Span
 }
 
@@ -21,11 +21,11 @@ type RemoteActor struct {
 }
 
 type actorInterface interface {
-	React(string, func(Message)) *Actor
-	reactions() map[string]func(Message)
-	unbecomeHistory() map[string]func(Message)
-	getDataChan() chan Message
-	setDataChan(chan Message)
+	React(string, func(Context)) *Actor
+	reactions() map[string]func(Context)
+	unbecomeHistory() map[string]func(Context)
+	getDataChan() chan Context
+	setDataChan(chan Context)
 	getCloseChan() chan int
 	setCloseChan(chan int)
 	setName(string)
@@ -43,10 +43,10 @@ func (actor *Actor) String() string {
 	return actor.name
 }
 
-func (actor *Actor) React(messageType string, f func(Message)) *Actor {
+func (actor *Actor) React(messageType string, f func(Context)) *Actor {
 	if actor.conf == nil {
-		actor.conf = make(map[string]func(Message))
-		actor.unbecome = make(map[string]func(Message))
+		actor.conf = make(map[string]func(Context))
+		actor.unbecome = make(map[string]func(Context))
 	}
 
 	actor.conf[messageType] = f
@@ -54,19 +54,19 @@ func (actor *Actor) React(messageType string, f func(Message)) *Actor {
 	return actor
 }
 
-func (actor *Actor) reactions() map[string]func(Message) {
+func (actor *Actor) reactions() map[string]func(Context) {
 	return actor.conf
 }
 
-func (actor *Actor) unbecomeHistory() map[string]func(Message) {
+func (actor *Actor) unbecomeHistory() map[string]func(Context) {
 	return actor.unbecome
 }
 
-func (actor *Actor) getDataChan() chan Message {
+func (actor *Actor) getDataChan() chan Context {
 	return actor.dataChan
 }
 
-func (actor *Actor) setDataChan(dataChan chan Message) {
+func (actor *Actor) setDataChan(dataChan chan Context) {
 	actor.dataChan = dataChan
 }
 
