@@ -3,7 +3,6 @@ package gosiris
 import (
 	"testing"
 	"time"
-	"github.com/opentracing/opentracing-go/log"
 	"fmt"
 )
 
@@ -44,7 +43,7 @@ func TestBasic(t *testing.T) {
 
 	//Register the reactions to event types (here a reaction to context)
 	childActor.React("context", func(context Context) {
-		context.Self.LogInfo("Received %v\n", context.Data)
+		context.Self.LogInfo(context, "Received %v\n", context.Data)
 	})
 
 	//Register the child actor
@@ -76,14 +75,14 @@ func TestStatefulness(t *testing.T) {
 	defer parentActor.Close()
 
 	f := func(context Context) {
-		context.Self.LogInfo("Receive response %v\n", context.Data)
+		context.Self.LogInfo(context, "Receive response %v\n", context.Data)
 	}
 
 	parentActor.React("helloback", f).React("error", f).React("help", f)
 	ActorSystem().RegisterActor("parent", &parentActor, nil)
 
 	childActor.React("hello", func(context Context) {
-		context.Self.LogInfo("Receive request %v\n", context.Data)
+		context.Self.LogInfo(context, "Receive request %v\n", context.Data)
 
 		name := context.Data.(string)
 
@@ -123,7 +122,7 @@ func TestForward(t *testing.T) {
 	forwarderActor := Actor{}
 	defer forwarderActor.Close()
 	forwarderActor.React("context", func(context Context) {
-		context.Self.LogInfo("Received %v\n", context.Data)
+		context.Self.LogInfo(context, "Received %v\n", context.Data)
 		context.Self.Forward(context, "childActor1", "childActor2")
 	})
 	ActorSystem().SpawnActor(&parentActor, "forwarderActor", &forwarderActor, nil)
@@ -131,14 +130,14 @@ func TestForward(t *testing.T) {
 	childActor1 := Actor{}
 	defer childActor1.Close()
 	childActor1.React("context", func(context Context) {
-		context.Self.LogInfo("Received %v from %v\n", context.Data, context.Sender)
+		context.Self.LogInfo(context, "Received %v from %v\n", context.Data, context.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor1", &childActor1, nil)
 
 	childActor2 := Actor{}
 	defer childActor2.Close()
 	childActor2.React("context", func(context Context) {
-		context.Self.LogInfo("Received %v from %v\n", context.Data, context.Sender)
+		context.Self.LogInfo(context, "Received %v from %v\n", context.Data, context.Sender)
 	})
 	ActorSystem().SpawnActor(&forwarderActor, "childActor2", &childActor2, nil)
 
@@ -160,19 +159,19 @@ func TestBecomeUnbecome(t *testing.T) {
 
 	angry := func(context Context) {
 		if context.Data == "happy" {
-			context.Self.LogInfo("Unbecome\n")
+			context.Self.LogInfo(context, "Unbecome\n")
 			context.Self.Unbecome(context.MessageType)
 		} else {
-			context.Self.LogInfo("Angrily receiving %v\n", context.Data)
+			context.Self.LogInfo(context, "Angrily receiving %v\n", context.Data)
 		}
 	}
 
 	happy := func(context Context) {
 		if context.Data == "angry" {
-			context.Self.LogInfo("I shall become angry\n")
+			context.Self.LogInfo(context, "I shall become angry\n")
 			context.Self.Become(context.MessageType, angry)
 		} else {
-			context.Self.LogInfo("Happily receiving %v\n", context.Data)
+			context.Self.LogInfo(context, "Happily receiving %v\n", context.Data)
 		}
 	}
 
@@ -208,13 +207,13 @@ func TestAmqp(t *testing.T) {
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(context Context) {
-		context.Self.LogInfo("Received %v", context.Data)
+		context.Self.LogInfo(context, "Received %v", context.Data)
 	})
 	defer actor1.Close()
 	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("context", func(context Context) {
-		context.Self.LogInfo("Received %v", context.Data)
+		context.Self.LogInfo(context, "Received %v", context.Data)
 		context.Sender.Tell(context, "reply", "hello back", context.Self)
 	})
 	defer actor2.Close()
@@ -238,13 +237,13 @@ func TestKafka(t *testing.T) {
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(context Context) {
-		context.Self.LogInfo("Received %v", context.Data)
+		context.Self.LogInfo(context, "Received %v", context.Data)
 	})
 	defer actor1.Close()
 	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("context", func(context Context) {
-		context.Self.LogInfo("Received %v", context.Data)
+		context.Self.LogInfo(context, "Received %v", context.Data)
 		context.Sender.Tell(EmptyContext, "reply", "hello back", context.Self)
 	})
 	defer actor2.Close()
@@ -275,16 +274,14 @@ func TestAmqpKafka(t *testing.T) {
 	defer CloseActorSystem()
 
 	actor1 := new(Actor).React("reply", func(context Context) {
-		context.Self.ZipkinLogFields(context, log.String("amqp", "amqpx"))
-		context.Self.LogInfo("Received1 %v", context.Data)
+		context.Self.LogInfo(context, "Received1 %v", context.Data)
 
 	})
 	defer actor1.Close()
 	ActorSystem().RegisterActor("amqpActor", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
 
 	actor2 := new(Actor).React("context", func(context Context) {
-		context.Self.ZipkinLogFields(context, log.String("kafka", "kafkax"))
-		context.Self.LogInfo("Received2 %v", context.Data)
+		context.Self.LogInfo(context, "Received2 %v", context.Data)
 		context.Sender.Tell(context, "reply", "hello back", context.Self)
 	})
 	defer actor2.Close()
@@ -308,7 +305,7 @@ func TestRemoteClose(t *testing.T) {
 	defer CloseActorSystem()
 
 	actorY := new(Actor).React("hello", func(context Context) {
-		context.Self.LogInfo("Received %v", context.Data)
+		context.Self.LogInfo(context, "Received %v", context.Data)
 		context.Sender.Tell(context, "reply", fmt.Sprintf("Hello %v", context.Data), context.Self)
 	})
 	defer actorY.Close()
@@ -348,7 +345,7 @@ func TestAutocloseFalse(t *testing.T) {
 
 	actorY := new(Actor)
 	actorY.React(GosirisMsgPoisonPill, func(context Context) {
-		context.Self.LogInfo("Received a poison pill, closing.")
+		context.Self.LogInfo(context, "Received a poison pill, closing.")
 		actorY.Close()
 	})
 
@@ -371,16 +368,16 @@ func TestChildClosedNotificationLocal(t *testing.T) {
 	actorParent := new(Actor)
 	defer actorParent.Close()
 	actorParent.React(GosirisMsgChildClosed, func(context Context) {
-		context.Self.LogInfo("My child is closed")
+		context.Self.LogInfo(context, "My child is closed")
 	})
 
 	actorChild := new(Actor)
 	actorChild.React("do", func(context Context) {
 		if context.Data == 0 {
-			context.Self.LogInfo("I feel like being closed")
+			context.Self.LogInfo(context, "I feel like being closed")
 			actorChild.Close()
 		} else {
-			context.Self.LogInfo("Received %v", context.Data)
+			context.Self.LogInfo(context, "Received %v", context.Data)
 		}
 	})
 
@@ -409,16 +406,16 @@ func TestChildClosedNotificationRemote(t *testing.T) {
 	actorParent := new(Actor)
 	defer actorParent.Close()
 	actorParent.React(GosirisMsgChildClosed, func(context Context) {
-		context.Self.LogInfo("My child is closed")
+		context.Self.LogInfo(context, "My child is closed")
 	})
 
 	actorChild := new(Actor)
 	actorChild.React("do", func(context Context) {
 		if context.Data == "0" {
-			context.Self.LogInfo("I feel like being closed")
+			context.Self.LogInfo(context, "I feel like being closed")
 			actorChild.Close()
 		} else {
-			context.Self.LogInfo("Received %v", context.Data)
+			context.Self.LogInfo(context, "Received %v", context.Data)
 		}
 	})
 
@@ -452,7 +449,7 @@ func TestRepeat(t *testing.T) {
 	defer childActor.Close()
 
 	childActor.React("context", func(context Context) {
-		context.Self.LogInfo("Received %v\n", context.Data)
+		context.Self.LogInfo(context, "Received %v\n", context.Data)
 	})
 
 	ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)

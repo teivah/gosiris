@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 	"github.com/opentracing/opentracing-go"
-	zlog "github.com/opentracing/opentracing-go/log"
 )
 
 type ActorRef struct {
@@ -18,17 +17,12 @@ type ActorRefInterface interface {
 	Tell(Context, string, interface{}, ActorRefInterface) error
 	Repeat(string, time.Duration, interface{}, ActorRefInterface) (chan struct{}, error)
 	AskForClose(ActorRefInterface)
-	LogInfo(string, ...interface{})
-	LogError(string, ...interface{})
+	LogInfo(Context, string, ...interface{})
+	LogError(Context, string, ...interface{})
 	Become(string, func(Context)) error
 	Unbecome(string) error
 	Name() string
 	Forward(Context, ...string)
-	//ZipkinStartSpan(spanName, operationName string)
-	//ZipkinStartChildSpan(parentSpanName, spanName, operationName string)
-	//ZipkinStopSpan(spanName string)
-	ZipkinLogFields(Context, ...zlog.Field)
-	//ZipkinLogKV(spanName string, alternatingKeyValues ...interface{})
 }
 
 func newActorRef(name string) ActorRefInterface {
@@ -39,12 +33,18 @@ func newActorRef(name string) ActorRefInterface {
 	return ref
 }
 
-func (ref ActorRef) LogInfo(format string, a ...interface{}) {
+func (ref ActorRef) LogInfo(context Context, format string, a ...interface{}) {
 	ref.infoLogger.Printf(format, a...)
+	if zipkinSystemInitialized {
+		logZipkinMessage(context.span, fmt.Sprintf(format, a...))
+	}
 }
 
-func (ref ActorRef) LogError(format string, a ...interface{}) {
+func (ref ActorRef) LogError(context Context, format string, a ...interface{}) {
 	ref.errorLogger.Printf(format, a...)
+	if zipkinSystemInitialized {
+		logZipkinMessage(context.span, fmt.Sprintf(format, a...))
+	}
 }
 
 func (ref ActorRef) Tell(context Context, messageType string, data interface{}, sender ActorRefInterface) error {
@@ -169,24 +169,3 @@ func (ref ActorRef) Forward(context Context, destinations ...string) {
 		actorRef.Tell(context, context.MessageType, context.Data, context.Sender)
 	}
 }
-
-//func (ref ActorRef) ZipkinStartSpan(spanName, operationName string) {
-//	startZipkinSpan(spanName, operationName)
-//}
-//
-//func (ref ActorRef) ZipkinStartChildSpan(parentSpanName, spanName, operationName string) {
-//	startZipkinChildSpan(parentSpanName, spanName, operationName)
-//}
-//
-//func (ref ActorRef) ZipkinStopSpan(spanName string) {
-//	stopZipkinSpan(spanName)
-//}
-
-func (ref ActorRef) ZipkinLogFields(message Context, fields ...zlog.Field) {
-	logZipkinFields(message.span, fields...)
-}
-
-//
-//func (ref ActorRef) ZipkinLogKV(spanName string, alternatingKeyValues ...interface{}) {
-//	logZipkinKV(spanName, alternatingKeyValues...)
-//}
