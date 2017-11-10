@@ -10,14 +10,11 @@ gosiris is based on three principles: **Configure**, **Discover**, **React**
 
 # Main features
 
-The main features are the following:
-* Manage a hierarchy of actors
-* Each actor can be either local or distributed (AMQP broker)
-* Send, Forward and Repeat messages between actors
-* Become/Unbecome capability to modify an actor behavior at runtime
-* Automatic registration and discovery of the actors (etcd registry)
-
-You should check the following examples for more details
+* Manage a hierarchy of actors (each actor has its own: state, behavior, mailbox, child actors)
+* Deploy remote actors accessible though an AMQP broker or Kafka
+* Automated registration and runtime discoverability using etcd registry
+* Zipkin integration 
+* Built-in patterns (become/unbecome, send, forward, repeat, child supervision)
 
 # Hello world
 
@@ -25,40 +22,40 @@ You should check the following examples for more details
 package main
 
 import (
-	"github.com/teivah/gosiris/gosiris"
+	"gosiris/gosiris"
 )
 
 func main() {
 	//Init a local actor system
-    gosiris.InitActorSystem(gosiris.SystemOptions{
-        ActorSystemName: "ActorSystem",
-    })
+	gosiris.InitActorSystem(gosiris.SystemOptions{
+		ActorSystemName: "ActorSystem",
+	})
 
-    //Create an actor
-    parentActor := gosiris.Actor{}
-    //Close an actor
-    defer parentActor.Close()
+	//Create an actor
+	parentActor := gosiris.Actor{}
+	//Close an actor
+	defer parentActor.Close()
 
-    //Create an actor
-    childActor := gosiris.Actor{}
-    //Close an actor
-    defer childActor.Close()
-    //Register a reaction to event types ("message" in this case)
-    childActor.React("message", func(context gosiris.Context) {
-        context.Self.LogInfo(context, "Received %v\n", context.Data)
-    })
+	//Create an actor
+	childActor := gosiris.Actor{}
+	//Close an actor
+	defer childActor.Close()
+	//Register a reaction to event types ("message" in this case)
+	childActor.React("message", func(context gosiris.Context) {
+		context.Self.LogInfo(context, "Received %v\n", context.Data)
+	})
 
-    //Register an actor to the system
-    gosiris.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
-    //Register an actor by spawning it
-    gosiris.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
+	//Register an actor to the system
+	gosiris.ActorSystem().RegisterActor("parentActor", &parentActor, nil)
+	//Register an actor by spawning it
+	gosiris.ActorSystem().SpawnActor(&parentActor, "childActor", &childActor, nil)
 
-    //Retrieve actor references
-    parentActorRef, _ := gosiris.ActorSystem().ActorOf("parentActor")
-    childActorRef, _ := gosiris.ActorSystem().ActorOf("childActor")
+	//Retrieve actor references
+	parentActorRef, _ := gosiris.ActorSystem().ActorOf("parentActor")
+	childActorRef, _ := gosiris.ActorSystem().ActorOf("childActor")
 
-    //Send a message from one actor to another (from parentActor to childActor)
-    childActorRef.Tell(gosiris.EmptyContext, "message", "Hi! How are you?", parentActorRef)
+	//Send a message from one actor to another (from parentActor to childActor)
+	childActorRef.Tell(gosiris.EmptyContext, "message", "Hi! How are you?", parentActorRef)
 }
 ```
 
@@ -68,7 +65,7 @@ INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 
 # Examples
 
-See the examples in [actor_test.go ](gosiris/actor_test.go).
+See the examples in [actor_test.go](gosiris/actor_test.go).
 
 # Environment
 
@@ -92,7 +89,11 @@ The last command is not mandatory but it allows to expose a web UI on the port 1
 
 [https://teivah.io/blog/running-kafka-1-0-in-docker/](https://teivah.io/blog/running-kafka-1-0-in-docker/)
 
-Meanwhile, the gosiris tests are using several hostnames you need to configure: _etcd_, _amqp_ and _kafka_.
+* A Zipkin server:
+
+docker run --name zipkin -d -p 9411:9411 openzipkin/zipkin
+
+Meanwhile, the gosiris tests are using several hostnames you need to configure: _etcd_, _amqp_, _zipkin_, and _kafka_.
 
 # Troubleshooting
 
