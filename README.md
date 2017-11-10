@@ -61,7 +61,7 @@ INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 
 ## Distributed actor system example
 
-In the following example, **in less than 30 effective lines of code**, we will see how to create a distributed actor system. An actor will be triggered by AMQP messages while another one will be triggered by Kafka events. Each actor will register itself in an etcd instance and will discover the other actor at runtime. Last but not least, gosiris will also manage the Zipkin integration by automatically managing the spans and forwarding the logs.
+In the following example, **in less than 30 effective lines of code**, we will see how to create a distributed actor system implementing a request/reply interaction. An actor will be triggered by AMQP messages while another one will be triggered by Kafka events. Each actor will register itself in an etcd instance and will discover the other actor at runtime. Last but not least, gosiris will also manage the Zipkin integration by automatically managing the spans and forwarding the logs.
 
 ```go
 package main
