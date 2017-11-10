@@ -2,8 +2,8 @@ package gosiris
 
 import (
 	"fmt"
-	"time"
 	"github.com/opentracing/opentracing-go"
+	"time"
 )
 
 var root *Actor
@@ -309,7 +309,7 @@ func (system *actorSystem) Invoke(message Context) error {
 				ctx, _ := extract(message.carrier)
 				span = tracer.StartSpan("operation", opentracing.ChildOf(ctx))
 				InfoLogger.Printf("Starting child span")
-				message.span = span;
+				message.span = span
 			}
 			f(message)
 			if message.carrier != nil {

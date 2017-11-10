@@ -1,9 +1,9 @@
 package gosiris
 
 import (
+	"fmt"
 	"testing"
 	"time"
-	"fmt"
 )
 
 type ParentActor struct {
@@ -18,13 +18,10 @@ type ChildActor struct {
 func TestBasic(t *testing.T) {
 	t.Log("Starting Basic test")
 
-	//Configure the actor system options
-	opts := SystemOptions{
-		ActorSystemName: "ActorSystem",
-	}
-
 	//Init a local actor system
-	InitActorSystem(opts)
+	InitActorSystem(SystemOptions{
+		ActorSystemName: "ActorSystem",
+	})
 	//Defer the actor system closure
 	defer CloseActorSystem()
 

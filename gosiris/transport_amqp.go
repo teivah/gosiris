@@ -1,8 +1,8 @@
 package gosiris
 
 import (
-	"github.com/streadway/amqp"
 	"encoding/json"
+	"github.com/streadway/amqp"
 )
 
 var Amqp = "amqp"
@@ -59,7 +59,7 @@ func (a *amqpTransport) Receive(queueName string) {
 		ErrorLogger.Printf("Error while declaring queue %v: %v", queueName, err)
 	}
 
-	msgs, err := a.channel.Consume(
+	msgs, _ := a.channel.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack

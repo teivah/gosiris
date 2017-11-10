@@ -1,11 +1,11 @@
 package gosiris
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Shopify/sarama"
 	"strings"
-	"fmt"
 	"time"
-	"encoding/json"
 )
 
 var Kafka = "kafka"

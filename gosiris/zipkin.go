@@ -1,8 +1,8 @@
 package gosiris
 
 import (
-	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/opentracing/opentracing-go"
+	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 )
 
 var (

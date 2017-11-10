@@ -1,11 +1,10 @@
 package gosiris
 
 import (
-	"github.com/coreos/etcd/client"
-	"time"
 	"context"
+	"github.com/coreos/etcd/client"
 	"strings"
-	"fmt"
+	"time"
 )
 
 const (
@@ -42,7 +41,10 @@ func (etcdClient *etcdClient) Close() {
 }
 
 func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDelete func(string)) error {
-	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{0, true})
+	w := etcdClient.api.Watcher(actors_configuration, &client.WatcherOptions{
+		AfterIndex: 0,
+		Recursive:  true,
+	})
 
 	for {
 		r, err := w.Next(context.Background())
@@ -65,7 +67,6 @@ func (etcdClient *etcdClient) Watch(cbCreate func(string, *ActorOptions), cbDele
 			cbCreate(k, v)
 		}
 	}
-	return nil
 }
 
 func parseNode(node *client.Node) (string, *ActorOptions) {
@@ -101,7 +102,7 @@ func (etcdClient *etcdClient) RegisterActor(name string, options OptionsInterfac
 
 	err := etcdClient.Set(k, v)
 	if err != nil {
-		fmt.Errorf("Failed to register actor %v: %v", k, err)
+		ErrorLogger.Printf("Failed to register actor %v: %v", k, err)
 		return err
 	}
 
@@ -136,7 +137,11 @@ func (etcdClient *etcdClient) Delete(key string) error {
 }
 
 func (etcdClient *etcdClient) Get(key string) (*client.Response, error) {
-	resp, err := etcdClient.api.Get(context.Background(), key, &client.GetOptions{false, false, false})
+	resp, err := etcdClient.api.Get(context.Background(), key, &client.GetOptions{
+		Recursive: false,
+		Sort:      false,
+		Quorum:    false,
+	})
 
 	if err != nil {
 		ErrorLogger.Printf("etcd get %v error %v", key, err)

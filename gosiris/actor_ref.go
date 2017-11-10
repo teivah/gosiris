@@ -2,9 +2,9 @@ package gosiris
 
 import (
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"time"
-	"github.com/opentracing/opentracing-go"
 )
 
 type ActorRef struct {
@@ -82,19 +82,18 @@ func (ref ActorRef) Repeat(messageType string, d time.Duration, data interface{}
 	t := time.NewTicker(d)
 	stop := make(chan struct{})
 
-	go
-		func(t *time.Ticker, stop chan struct{}) {
-			for {
-				select {
-				case <-t.C:
-					dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options, nil)
-				case <-stop:
-					t.Stop()
-					close(stop)
-					return
-				}
+	go func(t *time.Ticker, stop chan struct{}) {
+		for {
+			select {
+			case <-t.C:
+				dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options, nil)
+			case <-stop:
+				t.Stop()
+				close(stop)
+				return
 			}
-		}(t, stop)
+		}
+	}(t, stop)
 
 	return stop, nil
 }
@@ -164,7 +163,7 @@ func (ref ActorRef) Forward(context Context, destinations ...string) {
 	for _, v := range destinations {
 		actorRef, err := ActorSystem().ActorOf(v)
 		if err != nil {
-			fmt.Errorf("actor %v is not part of the actor system", v)
+			ErrorLogger.Printf("actor %v is not part of the actor system", v)
 		}
 		actorRef.Tell(context, context.MessageType, context.Data, context.Sender)
 	}
