@@ -10,7 +10,9 @@ gosiris is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for G
 * Zipkin integration 
 * Built-in patterns (become/unbecome, send, forward, repeat, child supervision)
 
-# Hello world
+# Examples
+
+## Hello world
 
 ```go
 package main
@@ -57,7 +59,73 @@ func main() {
 INFO: [childActor] 1988/01/08 01:00:00 Received Hi! How are you?
 ```
 
-# Examples
+## Distributed actor system example
+
+In the following example, **in less than 30 effective lines of code**, we will see how to create a distributed actor system. An actor will be triggered by AMQP messages while another one will be triggered by Kafka events. Each actor will register itself in an etcd instance and will discover the other actor at runtime. Last but not least, gosiris will also manage the Zipkin integration by automatically managing the spans and forwarding the logs.
+
+```go
+package main
+
+import (
+	"gosiris/gosiris"
+	"time"
+)
+
+func main() {
+	//Configure a distributed actor system with an etcd registry and a Zipkin integration
+	gosiris.InitActorSystem(gosiris.SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+		ZipkinOptions: gosiris.ZipkinOptions{
+			Url:      "http://zipkin:9411/api/v1/spans",
+			Debug:    true,
+			HostPort: "0.0.0.0",
+			SameSpan: true,
+		},
+	})
+	//Defer the actor system closure
+	defer gosiris.CloseActorSystem()
+
+	//Configure actor1
+	actor1 := new(gosiris.Actor).React("reply", func(context gosiris.Context) {
+		//Because Zipkin is enabled, the log will be also sent to the Zipkin server
+		context.Self.LogInfo(context, "Received: %v", context.Data)
+
+	})
+	//Defer actor1 closure
+	defer actor1.Close()
+	//Register a remote actor accessible through AMQP
+	gosiris.ActorSystem().RegisterActor("actor1", actor1, new(gosiris.ActorOptions).SetRemote(true).SetRemoteType(gosiris.Amqp).SetUrl("amqp://guest:guest@amqp:5672/").SetDestination("actor1"))
+
+	//Configure actor2
+	actor2 := new(gosiris.Actor).React("context", func(context gosiris.Context) {
+		//Because Zipkin is enabled, the log will be also sent to the Zipkin server
+		context.Self.LogInfo(context, "Received: %v", context.Data)
+		context.Sender.Tell(context, "reply", "hello back", context.Self)
+	})
+	//Defer actor2 closure
+	defer actor2.Close()
+	//Register a remote actor accessible through Kafka
+	gosiris.ActorSystem().SpawnActor(actor1, "actor2", actor2, new(gosiris.ActorOptions).SetRemote(true).SetRemoteType(gosiris.Kafka).SetUrl("kafka:9092").SetDestination("actor2"))
+
+	//Retrieve the actor references
+	actor1Ref, _ := gosiris.ActorSystem().ActorOf("actor1")
+	actor2Ref, _ := gosiris.ActorSystem().ActorOf("actor2")
+
+	//Send a message to the kafkaRef
+	actor2Ref.Tell(gosiris.EmptyContext, "context", "hello", actor1Ref)
+
+	time.Sleep(250 * time.Millisecond)
+}
+
+```
+
+```
+INFO: [actor2] 2017/11/11 00:38:24 Received: hello
+INFO: [actor1] 2017/11/11 00:38:24 Received: hello back
+```
+
+## More Examples
 
 See the examples in [actor_test.go](gosiris/actor_test.go).
 
@@ -103,4 +171,4 @@ This is a known issue with the etcd client used. The manual workaround (for the 
 * Open an issue if you want a new feature or if you spotted a bug
 * Feel free to propose pull requests
 
-Any contribution is more than welcome! In the meantime, if we want to discuss about gosiris you can contact me [@teivah](https://twitter.com/teivah).
+Any contribution is more than welcome! In the meantime, if we want to discuss gosiris you can contact me [@teivah](https://twitter.com/teivah).
