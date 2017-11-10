@@ -2,13 +2,7 @@
 
 gosiris is an [actor](https://en.wikipedia.org/wiki/Actor_model) framework for Golang.
 
-# Principles
-gosiris is based on three principles: **Configure**, **Discover**, **React**
-* Configure the actor behaviour depending on given event types
-* Discover the other actors automatically registered in a registry
-* React on events sent by other actors
-
-# Main features
+# Features
 
 * Manage a hierarchy of actors (each actor has its own: state, behavior, mailbox, child actors)
 * Deploy remote actors accessible though an AMQP broker or Kafka
