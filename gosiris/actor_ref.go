@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"github.com/opentracing/opentracing-go"
+	zlog "github.com/opentracing/opentracing-go/log"
 )
 
 type ActorRef struct {
@@ -13,7 +15,7 @@ type ActorRef struct {
 }
 
 type ActorRefInterface interface {
-	Tell(string, interface{}, ActorRefInterface) error
+	Tell(string, interface{}, ActorRefInterface, bool) error
 	Repeat(string, time.Duration, interface{}, ActorRefInterface) (chan struct{}, error)
 	AskForClose(ActorRefInterface)
 	LogInfo(string, ...interface{})
@@ -25,7 +27,7 @@ type ActorRefInterface interface {
 	//ZipkinStartSpan(spanName, operationName string)
 	//ZipkinStartChildSpan(parentSpanName, spanName, operationName string)
 	//ZipkinStopSpan(spanName string)
-	//ZipkinLogFields(spanName string, fields ...zpklog.Field)
+	ZipkinLogFields(Message, ...zlog.Field)
 	//ZipkinLogKV(spanName string, alternatingKeyValues ...interface{})
 }
 
@@ -45,7 +47,7 @@ func (ref ActorRef) LogError(format string, a ...interface{}) {
 	ref.errorLogger.Printf(format, a...)
 }
 
-func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefInterface) error {
+func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefInterface, newTransaction bool) error {
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
@@ -53,7 +55,16 @@ func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefIn
 		return err
 	}
 
-	dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options)
+	var span opentracing.Span
+	if newTransaction && zipkinSystemInitialized {
+		span = startZipkinSpan(sender.Name(), messageType)
+	}
+
+	dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options, span)
+
+	if newTransaction {
+		stopZipkinSpan(span)
+	}
 
 	return nil
 }
@@ -74,7 +85,7 @@ func (ref ActorRef) Repeat(messageType string, d time.Duration, data interface{}
 			for {
 				select {
 				case <-t.C:
-					dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options)
+					dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options, nil)
 				case <-stop:
 					t.Stop()
 					close(stop)
@@ -96,7 +107,7 @@ func (ref ActorRef) AskForClose(sender ActorRefInterface) {
 		return
 	}
 
-	go dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options)
+	go dispatch(actor.actor.getDataChan(), GosirisMsgPoisonPill, nil, &ref, sender, actor.options, nil)
 }
 
 func (ref ActorRef) Become(messageType string, f func(Message)) error {
@@ -153,7 +164,7 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 		if err != nil {
 			fmt.Errorf("actor %v is not part of the actor system", v)
 		}
-		actorRef.Tell(message.MessageType, message.Data, message.Sender)
+		actorRef.Tell(message.MessageType, message.Data, message.Sender, false)
 	}
 }
 
@@ -169,9 +180,13 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 //	stopZipkinSpan(spanName)
 //}
 
-//func (ref ActorRef) ZipkinLogFields(spanName string, fields ...zpklog.Field) {
-//	logZipkinFields(spanName, fields...)
-//}
+func (ref ActorRef) ZipkinLogFields(message Message, fields ...zlog.Field) {
+	ctx, _ := extract(message.carrier)
+	span := tracer.StartSpan("operation", opentracing.ChildOf(ctx))
+
+	logZipkinFields(span, fields...)
+}
+
 //
 //func (ref ActorRef) ZipkinLogKV(spanName string, alternatingKeyValues ...interface{}) {
 //	logZipkinKV(spanName, alternatingKeyValues...)

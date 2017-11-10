@@ -3,6 +3,7 @@ package gosiris
 import (
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/opentracing/opentracing-go"
+	zlog "github.com/opentracing/opentracing-go/log"
 )
 
 var (
@@ -50,20 +51,10 @@ func initZipkinSystem(actorSystemName string, options ZipkinOptions) error {
 	return nil
 }
 
-//func logZipkinFields(spanName string, fields ...log.Field) {
-//	if !zipkinSystemInitialized {
-//		ErrorLogger.Printf("Zipkin system not started")
-//		return
-//	}
-//
-//	span, exists := spans[spanName]
-//	if !exists {
-//		ErrorLogger.Printf("Span %v not started", spanName)
-//		return
-//	}
-//
-//	span.LogFields(fields...)
-//}
+func logZipkinFields(span opentracing.Span, fields ...zlog.Field) {
+	span.LogFields(fields...)
+}
+
 //
 //func logZipkinKV(spanName string, alternatingKeyValues ...interface{}) {
 //	if !zipkinSystemInitialized {
@@ -102,6 +93,7 @@ func startZipkinSpan(spanName, operationName string) opentracing.Span {
 		ErrorLogger.Printf("Zipkin system not started")
 		return nil
 	}
+
 	span := opentracing.StartSpan(spanName)
 	span.SetOperationName(operationName)
 

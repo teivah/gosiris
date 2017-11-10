@@ -3,6 +3,7 @@ package gosiris
 import (
 	"fmt"
 	"time"
+	"github.com/opentracing/opentracing-go"
 )
 
 var root *Actor
@@ -151,7 +152,7 @@ func (system *actorSystem) SpawnActor(parent actorInterface, name string, actor 
 					if err != nil {
 						ErrorLogger.Printf("Parent of actor %v not found", name)
 					}
-					dispatch(p.actor.getDataChan(), GosirisMsgHeartbeatRequest, nil, actorRef, p.actorRef, new(ActorOptions))
+					dispatch(p.actor.getDataChan(), GosirisMsgHeartbeatRequest, nil, actorRef, p.actorRef, new(ActorOptions), nil)
 				}
 			}
 		}(t, actorRef)
@@ -216,7 +217,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 			if err != nil {
 				ErrorLogger.Printf("Parent %v not registered", parentName)
 			}
-			p.actorRef.Tell(GosirisMsgChildClosed, name, v.actorRef)
+			p.actorRef.Tell(GosirisMsgChildClosed, name, v.actorRef, false)
 		}
 	}
 
@@ -290,12 +291,20 @@ func (system *actorSystem) Invoke(message Message) error {
 	} else if message.MessageType == GosirisMsgHeartbeatRequest {
 		InfoLogger.Printf("Actor %v has received a heartbeat request", actorAssociation.actor.Name())
 
-		message.Sender.Tell(GosirisMsgHeartbeatReply, nil, message.Self)
+		message.Sender.Tell(GosirisMsgHeartbeatReply, nil, message.Self, false)
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.MessageType]
 	if exists {
+		var span opentracing.Span
+		if message.carrier != nil {
+			ctx, _ := extract(message.carrier)
+			span = tracer.StartSpan("operation", opentracing.ChildOf(ctx))
+		}
 		f(message)
+		if message.carrier != nil {
+			span.Finish()
+		}
 	}
 
 	return nil

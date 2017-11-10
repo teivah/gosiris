@@ -20,7 +20,7 @@ const (
 	jsonData        = "data"
 	jsonSender      = "sender"
 	jsonSelf        = "self"
-	jsonCtx         = "ctx"
+	jsonTracing     = "tracing"
 )
 
 type Message struct {
@@ -28,48 +28,56 @@ type Message struct {
 	Data        interface{}
 	Sender      ActorRefInterface
 	Self        ActorRefInterface
-	tracer      opentracing.Tracer
+	carrier     opentracing.TextMapCarrier
 }
 
 func (message Message) MarshalJSON() ([]byte, error) {
-	m := make(map[string]string)
+	m := make(map[string]interface{})
 	m[jsonMessageType] = message.MessageType
 	m[jsonData] = fmt.Sprint(message.Data)
 	m[jsonSender] = message.Sender.Name()
 	m[jsonSelf] = message.Self.Name()
+	m[jsonTracing] = message.carrier
 	return json.Marshal(m)
 }
 
 func (message *Message) UnmarshalJSON(b []byte) error {
-	var m map[string]string
+	var m map[string]interface{}
 	err := json.Unmarshal(b, &m)
 	if err != nil {
 		ErrorLogger.Printf("Unmarshalling error: %v", err)
 		return err
 	}
 
-	message.MessageType = m[jsonMessageType]
+	message.MessageType = m[jsonMessageType].(string)
 
 	message.Data = m[jsonData]
 
-	self := m[jsonSelf]
+	self := m[jsonSelf].(string)
 	selfAssociation, err := ActorSystem().actor(self)
 	if err != nil {
 		return err
 	}
 	message.Self = selfAssociation.actorRef
 
-	sender := m[jsonSender]
+	sender := m[jsonSender].(string)
 	senderAssociation, err := ActorSystem().actor(sender)
 	if err != nil {
 		return err
 	}
 	message.Sender = senderAssociation.actorRef
 
+	t := m[jsonTracing].(map[string]interface{})
+	message.carrier = make(map[string]string)
+
+	for k, v := range t {
+		message.carrier[k] = v.(string)
+	}
+
 	return nil
 }
 
-func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface) error {
+func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface, span opentracing.Span) error {
 	defer func() {
 		if r := recover(); r != nil {
 			InfoLogger.Printf("Dispatch recovered in %v", r)
@@ -78,7 +86,9 @@ func dispatch(channel chan Message, messageType string, data interface{}, receiv
 
 	InfoLogger.Printf("Dispatching message %v from %v to %v", messageType, sender.Name(), receiver.Name())
 
-	m := Message{messageType, data, sender, receiver, nil}
+	carrier, _ := inject(span)
+
+	m := Message{messageType, data, sender, receiver, carrier}
 
 	if !options.Remote() {
 		channel <- m
