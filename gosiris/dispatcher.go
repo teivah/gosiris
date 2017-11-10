@@ -29,6 +29,7 @@ type Message struct {
 	Sender      ActorRefInterface
 	Self        ActorRefInterface
 	carrier     opentracing.TextMapCarrier
+	span        opentracing.Span
 }
 
 func (message Message) MarshalJSON() ([]byte, error) {
@@ -67,11 +68,15 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 	}
 	message.Sender = senderAssociation.actorRef
 
-	t := m[jsonTracing].(map[string]interface{})
-	message.carrier = make(map[string]string)
+	if value, exists := m[jsonTracing]; exists {
+		if value != nil {
+			t := value.(map[string]interface{})
+			message.carrier = make(map[string]string)
 
-	for k, v := range t {
-		message.carrier[k] = v.(string)
+			for k, v := range t {
+				message.carrier[k] = v.(string)
+			}
+		}
 	}
 
 	return nil
@@ -80,15 +85,14 @@ func (message *Message) UnmarshalJSON(b []byte) error {
 func dispatch(channel chan Message, messageType string, data interface{}, receiver ActorRefInterface, sender ActorRefInterface, options OptionsInterface, span opentracing.Span) error {
 	defer func() {
 		if r := recover(); r != nil {
-			InfoLogger.Printf("Dispatch recovered in %v", r)
+			ErrorLogger.Printf("Dispatch recovered in %v", r)
 		}
 	}()
 
 	InfoLogger.Printf("Dispatching message %v from %v to %v", messageType, sender.Name(), receiver.Name())
 
 	carrier, _ := inject(span)
-
-	m := Message{messageType, data, sender, receiver, carrier}
+	m := Message{messageType, data, sender, receiver, carrier, nil}
 
 	if !options.Remote() {
 		channel <- m
@@ -116,7 +120,7 @@ func receive(actor actorInterface, options OptionsInterface) {
 	if !options.Remote() {
 		defer func() {
 			if r := recover(); r != nil {
-				InfoLogger.Printf("Receive recovered in %v", r)
+				ErrorLogger.Printf("Receive recovered in %v", r)
 			}
 		}()
 

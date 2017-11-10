@@ -55,6 +55,9 @@ func logZipkinFields(span opentracing.Span, fields ...zlog.Field) {
 	span.LogFields(fields...)
 }
 
+func logZipkinMessage(span opentracing.Span) {
+}
+
 //
 //func logZipkinKV(spanName string, alternatingKeyValues ...interface{}) {
 //	if !zipkinSystemInitialized {
@@ -72,6 +75,10 @@ func logZipkinFields(span opentracing.Span, fields ...zlog.Field) {
 //}
 
 func inject(span opentracing.Span) (opentracing.TextMapCarrier, error) {
+	if span == nil {
+		return nil, nil
+	}
+
 	carrier := opentracing.TextMapCarrier{}
 
 	err := tracer.Inject(span.Context(), opentracing.TextMap, carrier)

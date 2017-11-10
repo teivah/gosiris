@@ -294,7 +294,7 @@ func TestAmqpKafka(t *testing.T) {
 	kafkaRef, _ := ActorSystem().ActorOf("kafkaActor")
 
 	kafkaRef.Tell("message", "hello", amqpRef, true)
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(1500 * time.Second)
 }
 
 //

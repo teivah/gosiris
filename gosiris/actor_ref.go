@@ -181,10 +181,7 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 //}
 
 func (ref ActorRef) ZipkinLogFields(message Message, fields ...zlog.Field) {
-	ctx, _ := extract(message.carrier)
-	span := tracer.StartSpan("operation", opentracing.ChildOf(ctx))
-
-	logZipkinFields(span, fields...)
+	logZipkinFields(message.span, fields...)
 }
 
 //

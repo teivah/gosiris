@@ -300,6 +300,8 @@ func (system *actorSystem) Invoke(message Message) error {
 		if message.carrier != nil {
 			ctx, _ := extract(message.carrier)
 			span = tracer.StartSpan("operation", opentracing.ChildOf(ctx))
+			InfoLogger.Printf("Starting child span")
+			message.span = span;
 		}
 		f(message)
 		if message.carrier != nil {

@@ -98,7 +98,7 @@ func newConsumer(brokerList []string) (sarama.Consumer, error) {
 
 	config.Producer.RequiredAcks = sarama.WaitForLocal
 	config.Producer.Compression = sarama.CompressionSnappy
-	config.Producer.Flush.Frequency = 500 * time.Millisecond
+	config.Producer.Flush.Frequency = 15 * time.Millisecond
 
 	consumer, err := sarama.NewConsumer(brokerList, config)
 	if err != nil {
@@ -112,9 +112,9 @@ func newConsumer(brokerList []string) (sarama.Consumer, error) {
 func newProducer(brokerList []string) (sarama.AsyncProducer, error) {
 	config := sarama.NewConfig()
 
-	config.Producer.RequiredAcks = sarama.WaitForLocal       // Only wait for the leader to ack
-	config.Producer.Compression = sarama.CompressionSnappy   // Compress messages
-	config.Producer.Flush.Frequency = 500 * time.Millisecond // Flush batches every 500ms
+	config.Producer.RequiredAcks = sarama.WaitForLocal      // Only wait for the leader to ack
+	config.Producer.Compression = sarama.CompressionSnappy  // Compress messages
+	config.Producer.Flush.Frequency = 15 * time.Millisecond // Flush batches every 500ms
 
 	producer, err := sarama.NewAsyncProducer(brokerList, config)
 	if err != nil {
