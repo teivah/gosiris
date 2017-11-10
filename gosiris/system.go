@@ -217,7 +217,7 @@ func (system *actorSystem) closeLocalActor(name string) {
 			if err != nil {
 				ErrorLogger.Printf("Parent %v not registered", parentName)
 			}
-			p.actorRef.Tell(GosirisMsgChildClosed, name, v.actorRef, false)
+			p.actorRef.Tell(EmptyMessage, GosirisMsgChildClosed, name, v.actorRef)
 		}
 	}
 
@@ -291,7 +291,7 @@ func (system *actorSystem) Invoke(message Message) error {
 	} else if message.MessageType == GosirisMsgHeartbeatRequest {
 		InfoLogger.Printf("Actor %v has received a heartbeat request", actorAssociation.actor.Name())
 
-		message.Sender.Tell(GosirisMsgHeartbeatReply, nil, message.Self, false)
+		message.Sender.Tell(EmptyMessage, GosirisMsgHeartbeatReply, nil, message.Self)
 	}
 
 	f, exists := actorAssociation.actor.reactions()[message.MessageType]

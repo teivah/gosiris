@@ -15,7 +15,7 @@ type ActorRef struct {
 }
 
 type ActorRefInterface interface {
-	Tell(string, interface{}, ActorRefInterface, bool) error
+	Tell(Message, string, interface{}, ActorRefInterface) error
 	Repeat(string, time.Duration, interface{}, ActorRefInterface) (chan struct{}, error)
 	AskForClose(ActorRefInterface)
 	LogInfo(string, ...interface{})
@@ -47,7 +47,7 @@ func (ref ActorRef) LogError(format string, a ...interface{}) {
 	ref.errorLogger.Printf(format, a...)
 }
 
-func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefInterface, newTransaction bool) error {
+func (ref ActorRef) Tell(message Message, messageType string, data interface{}, sender ActorRefInterface) error {
 	actor, err := ActorSystem().actor(ref.name)
 
 	if err != nil {
@@ -55,14 +55,16 @@ func (ref ActorRef) Tell(messageType string, data interface{}, sender ActorRefIn
 		return err
 	}
 
-	var span opentracing.Span
-	if newTransaction && zipkinSystemInitialized {
+	var span opentracing.Span = nil
+	if message.span != nil {
+		span = message.span
+	} else if zipkinSystemInitialized {
 		span = startZipkinSpan(sender.Name(), messageType)
 	}
 
 	dispatch(actor.actor.getDataChan(), messageType, data, &ref, sender, actor.options, span)
 
-	if newTransaction {
+	if span != nil {
 		stopZipkinSpan(span)
 	}
 
@@ -164,7 +166,7 @@ func (ref ActorRef) Forward(message Message, destinations ...string) {
 		if err != nil {
 			fmt.Errorf("actor %v is not part of the actor system", v)
 		}
-		actorRef.Tell(message.MessageType, message.Data, message.Sender, false)
+		actorRef.Tell(message, message.MessageType, message.Data, message.Sender)
 	}
 }
 

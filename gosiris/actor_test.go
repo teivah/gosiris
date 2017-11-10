@@ -285,7 +285,7 @@ func TestAmqpKafka(t *testing.T) {
 	actor2 := new(Actor).React("message", func(message Message) {
 		message.Self.ZipkinLogFields(message, log.String("kafka", "kafkax"))
 		message.Self.LogInfo("Received2 %v", message.Data)
-		message.Sender.Tell("reply", "hello back", message.Self, false)
+		message.Sender.Tell(message, "reply", "hello back", message.Self)
 	})
 	defer actor2.Close()
 	ActorSystem().SpawnActor(actor1, "kafkaActor", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Kafka).SetUrl("kafka:9092").SetDestination("actor2"))
@@ -293,7 +293,7 @@ func TestAmqpKafka(t *testing.T) {
 	amqpRef, _ := ActorSystem().ActorOf("amqpActor")
 	kafkaRef, _ := ActorSystem().ActorOf("kafkaActor")
 
-	kafkaRef.Tell("message", "hello", amqpRef, true)
+	kafkaRef.Tell(EmptyMessage, "message", "hello", amqpRef)
 	time.Sleep(1500 * time.Second)
 }
 

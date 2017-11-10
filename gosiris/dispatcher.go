@@ -10,6 +10,10 @@ func init() {
 
 }
 
+var (
+	EmptyMessage Message = Message{}
+)
+
 const (
 	GosirisMsgPoisonPill       = "gosirisPoisonPill"
 	GosirisMsgChildClosed      = "gosirisChildClosed"
