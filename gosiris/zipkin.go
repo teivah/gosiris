@@ -135,5 +135,6 @@ func closeZipkinSystem() {
 	if zipkinSystemInitialized {
 		InfoLogger.Printf("Closing Zipkin system")
 		collector.Close()
+		zipkinSystemInitialized = false
 	}
 }
