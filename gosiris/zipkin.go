@@ -47,6 +47,8 @@ func initZipkinSystem(actorSystemName string, options ZipkinOptions) error {
 
 	zipkinSystemInitialized = true
 
+	InfoLogger.Printf("Zipkin tracer started")
+
 	return nil
 }
 
