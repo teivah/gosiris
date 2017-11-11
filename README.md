@@ -131,31 +131,8 @@ See the examples in [actor_test.go](gosiris/actor_test.go).
 
 # Environment
 
-To setup the complete gosiris environment:
-* etcd:
-
-```bash
-docker run -d -v /usr/share/ca-certificates/:/etc/ssl/certs -p 4001:4001 -p 2380:2380 -p 2379:2379 quay.io/coreos/etcd:v2.3.8 -name etcd0 -advertise-client-urls http://${HostIP}:2379,http://${HostIP}:4001 -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 -initial-advertise-peer-urls http://${HostIP}:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster-1 -initial-cluster etcd0=http://${HostIP}:2380 -initial-cluster-state new
-```
-
-* An AMQP broker (e.g. RabbitMQ):
- 
-```bash
-docker run -d --hostname rabbit --name rabbit -p 4369:4369 -p 5671:5671 -p 5672:5672 -p 15672:15672 rabbitmq
-docker exec rabbit rabbitmq-plugins enable rabbitmq_management
-```
-
-The last command is not mandatory but it allows to expose a web UI on the port 15672.
-
-* A Kafka broker:
-
-[https://teivah.io/blog/running-kafka-1-0-in-docker/](https://teivah.io/blog/running-kafka-1-0-in-docker/)
-
-* A Zipkin server:
-
-docker run --name zipkin -d -p 9411:9411 openzipkin/zipkin
-
-Meanwhile, the gosiris tests are using several hostnames you need to configure: _etcd_, _amqp_, _zipkin_, and _kafka_.
+First of all, to run the examples you must configure the following hostnames: _etcd_, _amqp_, _zipkin_, and _kafka_.
+Then to setup the full environment, you can simply run the [Docker Compose](docker/docker-compose.yml).
 
 # Troubleshooting
 
