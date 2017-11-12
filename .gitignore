@@ -89,3 +89,4 @@ pkg/
 pkg/**
 
 /notes
+_config.yml
