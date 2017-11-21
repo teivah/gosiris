@@ -192,6 +192,37 @@ func TestBecomeUnbecome(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 }
 
+func TestCouchbase(t *testing.T) {
+	t.Log("Starting couchbase test")
+	time.Sleep(500 * time.Millisecond)
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+		RegistryUrl:     "http://etcd:2379",
+	}
+	InitActorSystem(opts)
+	defer CloseActorSystem()
+
+	actor1 := new(Actor).React("reply", func(context Context) {
+		context.Self.LogInfo(context, "Received %v", context.Data)
+	})
+	defer actor1.Close()
+	ActorSystem().RegisterActor("actorX", actor1, new(ActorOptions).SetRemote(true).SetRemoteType(Couchbase).SetUrl("couchbase://localhost").SetDestination("actor1"))
+
+	actor2 := new(Actor).React("context", func(context Context) {
+		context.Self.LogInfo(context, "Received %v", context.Data)
+		context.Sender.Tell(context, "reply", "hello back", context.Self)
+	})
+	defer actor2.Close()
+	ActorSystem().RegisterActor("actorY", actor2, new(ActorOptions).SetRemote(true).SetRemoteType(Couchbase).SetUrl("couchbase://localhost").SetDestination("actor2"))
+
+	actorRef1, _ := ActorSystem().ActorOf("actorX")
+	actorRef2, _ := ActorSystem().ActorOf("actorY")
+
+	actorRef2.Tell(EmptyContext, "context", "hello from ankit", actorRef1)
+	time.Sleep(500 * time.Millisecond)
+}
+
 func TestAmqp(t *testing.T) {
 	t.Log("Starting AMQP test")
 	time.Sleep(500 * time.Millisecond)
