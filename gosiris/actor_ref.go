@@ -2,6 +2,7 @@ package gosiris
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"log"
 	"time"
@@ -23,6 +24,7 @@ type ActorRefInterface interface {
 	Unbecome(string) error
 	Name() string
 	Forward(Context, ...string)
+	Ask(Context, string, interface{}, time.Duration) (interface{}, error)
 }
 
 func newActorRef(name string) ActorRefInterface {
@@ -166,5 +168,35 @@ func (ref ActorRef) Forward(context Context, destinations ...string) {
 			ErrorLogger.Printf("actor %v is not part of the actor system", v)
 		}
 		actorRef.Tell(context, context.MessageType, context.Data, context.Sender)
+	}
+}
+
+func (ref ActorRef) Ask(context Context, messageType string, data interface{}, timeout time.Duration) (interface{}, error) {
+	temp := Actor{name: "temp_" + uuid.New().String()}
+	defer temp.Close()
+
+	ch := make(chan interface{}, 1)
+	temp.React(messageType, func(ctx Context) {
+		ch <- ctx.Data
+	})
+
+	err := ActorSystem().RegisterActor(temp.name, &temp, nil)
+	if err != nil {
+		ErrorLogger.Printf("Failed to ask to %v: %v", ref.name, err)
+		return nil, err
+	}
+
+	tempRef, _ := ActorSystem().ActorOf(temp.name)
+	err = ref.Tell(EmptyContext, messageType, data, tempRef)
+	if err != nil {
+		ErrorLogger.Printf("Failed to ask to %v: %v", ref.name, err)
+		return nil, err
+	}
+
+	select {
+	case reply := <-ch:
+		return reply, nil
+	case <-time.After(timeout):
+		return nil, fmt.Errorf("timeout while waiting for the answer")
 	}
 }

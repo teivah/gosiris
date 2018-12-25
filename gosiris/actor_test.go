@@ -484,3 +484,38 @@ func TestDefaultWatcher(t *testing.T) {
 
 	time.Sleep(21 * time.Millisecond)
 }
+
+func TestAsk(t *testing.T) {
+	t.Log("Starting ask test")
+
+	opts := SystemOptions{
+		ActorSystemName: "ActorSystem",
+	}
+	InitActorSystem(opts)
+	defer CloseActorSystem()
+
+	replierActor := Actor{}
+	defer replierActor.Close()
+
+	replierActor.React("time", func(context Context) {
+		context.Sender.Tell(EmptyContext, "time", time.Now(), context.Self)
+	})
+
+	ActorSystem().RegisterActor("replierActor", &replierActor, nil)
+
+	replierActorRef, _ := ActorSystem().ActorOf("replierActor")
+
+	successfulReply, err := replierActorRef.Ask(EmptyContext, "time", nil, 1 * time.Second)
+	if err != nil {
+		t.Error("reply not received")
+		t.Fail()
+	}
+	t.Logf("successfulReply was: %v", successfulReply)
+
+	reply, timeoutError := replierActorRef.Ask(EmptyContext, "unknownQuestion", nil, 1 * time.Second)
+	if reply != nil {
+		t.Error("this should have timed out")
+		t.Fail()
+	}
+	t.Logf("unknownQuestion timedout: %v", timeoutError.Error())
+}
